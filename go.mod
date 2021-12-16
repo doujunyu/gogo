@@ -1,4 +1,4 @@
-module gogo
+module github.com/doujunyu/gogo
 
 go 1.16
 
