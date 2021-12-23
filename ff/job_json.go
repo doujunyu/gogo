@@ -11,8 +11,7 @@ func (j *Job) JsonSuccess(all ...interface{}) {
 		Msg:  "操作成功",
 		Code: 0,
 	}
-	j.CheckByDataMesCode(&mes, all)
-	j.W.Write(mes.Json())
+	_, _ = j.W.Write(mes.Json(all))
 }
 
 // JsonError 返回成功的json格式
@@ -22,19 +21,6 @@ func (j *Job) JsonError(all ...interface{}) {
 		Msg:  "操作失败",
 		Code: 1,
 	}
-	j.CheckByDataMesCode(&mes, all)
-	j.W.Write(mes.Json())
+	_, _ = j.W.Write(mes.Json(all))
 }
 
-// CheckByDataMesCode 检查是否有空数据
-func (j *Job) CheckByDataMesCode(mess *utility.Message, all []interface{}) {
-	if len(all) >= 1 && all[0] != nil {
-		mess.Data = all[0]
-	}
-	if len(all) >= 2 && all[1] != nil {
-		mess.Msg = all[1].(string)
-	}
-	if len(all) >= 3 && all[2] != nil {
-		mess.Code = all[2].(int)
-	}
-}

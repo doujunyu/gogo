@@ -10,7 +10,17 @@ type Message struct {
 }
 
 // Json 返回json格式
-func (message *Message) Json() []byte {
+func (message *Message) Json(all []interface{}) []byte {
+	if len(all) >= 1 && all[0] != nil {
+		message.Data = all[0]
+	}
+	if len(all) >= 2 && all[1] != nil {
+		message.Msg = all[1].(string)
+	}
+	if len(all) >= 3 && all[2] != nil {
+		message.Code = all[2].(int)
+	}
+
 	dataJson, err := json.Marshal(message)
 	if err != nil {
 		//格式不合法的json数据

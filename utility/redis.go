@@ -21,28 +21,20 @@ func RedisLine() redis.Conn {
 		if err != nil {
 			return
 		}
-		_, err = redisLine.Do("auth", REDIS_PASSWORD)
-		if err != nil {
-			_ = redisLine.Close()
-			return
+		if REDIS_PASSWORD != "" {
+			_, err = redisLine.Do("auth", REDIS_PASSWORD)
+			if err != nil {
+				_ = redisLine.Close()
+				return
+			}
 		}
 		_, err = redisLine.Do("select", REDIS_SELECT)
 		if err != nil {
 			_ = redisLine.Close()
+			fmt.Println(err)
 			return
 		}
-		if err == nil {
-			sendRedisLine = redisLine
-		}
-		fmt.Println("redis链接执行")
+		sendRedisLine = redisLine
 	})
 	return sendRedisLine
 }
-
-
-
-
-
-
-
-

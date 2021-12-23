@@ -1,8 +1,11 @@
 package ff
 
 import (
+	"fmt"
 	_ "github.com/joho/godotenv/autoload"
+	"gogo/utility"
 	"net/http"
+	"time"
 )
 
 // HandlerFunc 接口需要执行的程序方法
@@ -10,24 +13,44 @@ type HandlerFunc func(util *Job)
 type GroupFunc func()
 type Centre struct {
 	Middleware []HandlerFunc
+	LogChan *chan utility.LogWriteStrings
+	Server *http.Server
 }
 
 
 func ReadyGo() *Centre {
+	logChan := make(chan utility.LogWriteStrings)
+
 	return &Centre{
 		Middleware: []HandlerFunc{},
+		LogChan: &logChan,
+		Server: &http.Server{
+			Addr:           ":7070",
+			Handler:        http.TimeoutHandler(http.DefaultServeMux, time.Second * (60 * 5), func()string{
+				msg := utility.Message{
+					Data: make([]int, 0),
+					Msg:  "操作失败",
+					Code: 1,
+				}
+				return string(msg.Json(nil))
+			}()),
+			ReadTimeout:    10 * time.Second,
+			WriteTimeout:   10 * time.Second,
+			MaxHeaderBytes: 1 << 20,
+		},
 	}
 }
-
 func (c *Centre) GET(relativePath string , HandlerFunc ...HandlerFunc) {
+
 	http.HandleFunc(relativePath, func(w http.ResponseWriter, r *http.Request) {
 		job := &Job{
-			Log:  JobNewLog(),  //初始化日志
+			Log:  JobNewLog(c.LogChan),  //初始化日志
 			File: JobNewFile(), //初始化文件
 		}
 		defer func() {
 			if err := recover(); err != nil {
 				job.JsonError(nil, "执行错误", 500)
+				fmt.Println(err)
 				return
 			}
 		}()
@@ -54,6 +77,13 @@ func (c *Centre) GET(relativePath string , HandlerFunc ...HandlerFunc) {
 		}
 		//sql.Exit()
 	})
+}
+
+func (c *Centre) LogChanOut(){
+	for{
+		data := <- *c.LogChan
+		utility.LogWrite(data.Url, data.FileName, data.Prefix, data.Content) //日志内存
+	}
 }
 
 
