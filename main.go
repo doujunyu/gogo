@@ -4,6 +4,7 @@ import (
 	"fmt"
 	_ "github.com/go-sql-driver/mysql"
 	"gogo/ff"
+	"gogo/sql"
 	"io/ioutil"
 	"os"
 	"reflect"
@@ -60,15 +61,17 @@ func ChanIn(a chan LogFunc,str string){
 		Logs(a)
 	}
 }
+//缓存测试
+
 func main123() {
-	a := make(chan LogFunc,10)
+	//a := make(chan LogFunc,10)
 	//a <- func("sdfs")
 
-	for {
-		data := <- a
-		//data()
-		fmt.Println(data)
-	}
+	//for {
+	//	data := <- a
+	//	//data()
+	//	fmt.Println(data)
+	//}
 	//go ChanOut(a)
 	//time.Sleep(time.Second *5)
 
@@ -88,32 +91,32 @@ func main123() {
 	//fmt.Println(data,err)
 	//fmt.Println(string(data.([]byte)),err)
 	//sql 查询
-	//set := sql.Db("fs_users")
-	//set.Field("id", "nickname")
-	//set.WhereId("3")
-	//set.Where("openid", "like", "%4o1Bs%")
-	//set.Where("status","!=","1")
-	//set.WhereInRaw("id",func(child *sql.Query,val ...interface{}){
-	//	child.Table("fs_user_address")
-	//	child.Field("user_id","path")
-	//	child.Where("status2","=",2)
-	//})
-	//set.WhereOrRaw(func(child *sql.Query,val ...interface{}){
-	//	child.Where("status3","=",val[0])
-	//	child.Where("status4","=",val[1])
-	//	child.WhereBetween("status6",6,6.3)
-	//	child.WhereOrRaw(func(child *sql.Query,val ...interface{}){
-	//		child.Where("status5","=",5)
-	//	})
-	//},3,4)
-	//set.OrderBy("id desc")
-	//set.PageSize(1,10)
-	//data, err := set.FindOnly()
-	//if err != nil {
-	//	fmt.Println(err)
-	//	return
-	//}
-	//fmt.Println(data,err)
+	set := sql.Db("fs_users")
+	set.Field("id", "nickname")
+	set.WhereId("3")
+	set.Where("openid", "like", "%4o1Bs%")
+	set.Where("status","!=","1")
+	set.WhereInRaw("id",func(child *sql.Query,val ...interface{}){
+		child.Table("fs_user_address")
+		child.Field("user_id","path")
+		child.Where("status2","=",2)
+	})
+	set.WhereOrRaw(func(child *sql.Query,val ...interface{}){
+		child.Where("status3","=",val[0])
+		child.Where("status4","=",val[1])
+		child.WhereBetween("status6",6,6.3)
+		child.WhereOrRaw(func(child *sql.Query,val ...interface{}){
+			child.Where("status5","=",5)
+		})
+	},3,4)
+	set.OrderBy("id desc")
+	set.PageSize(1,10)
+	data, err := set.FindOnly()
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	fmt.Println(data,err)
 
 	//map类型添加
 	//dataMap := make(map[string]interface{})
@@ -158,13 +161,23 @@ func main() {
 	//r.Middleware = append(r.Middleware, midd1)
 	//*r.LogChan <- 10
 	r.GET("/demo", func(j *ff.Job) {
+
 		j.W.Header().Set("Content-Type", "text/html")
-		fmt.Println("被访问")
+
+		if j.Input["doudou"] == "1"{
+			*r.ServerClose<-1
+			j.JsonSuccess(nil,"正在关机",1)
+			return
+		}
+		fmt.Println(j.Input["doudou"])
+		j.Log.Error("ceshi","这是一个记录")
 		//j.Log.Write("demo","doudou","ddddd")
 		//j.Log.Error("doudou","sefsef")
-		time.Sleep(time.Second * 5)
+		//time.Sleep(time.Second * 5)
 		//_ = tx.Rollback()
-		j.JsonSuccess(nil,"顺利通过")
+
+		//j.JsonError(nil,"顺利通过",1)
+		j.JsonSuccess(nil,"顺利通过",1)
 	})
 
 
@@ -180,11 +193,9 @@ func main() {
 		}
 		j.JsonSuccess(file, "aaaaa")
 		fmt.Println(file, err)
-
 	})
 
 	r.GET("/public/", func(j *ff.Job) {
-
 		file, _ := os.Open("." + j.R.URL.Path)
 		defer func(file *os.File) {
 			err := file.Close()
@@ -192,22 +203,12 @@ func main() {
 			}
 		}(file)
 		buff, _ := ioutil.ReadAll(file)
-		//errorHandle(err, w)
 		_,_ = j.W.Write(buff)
-		//fmt.Println(file, err)
-
 	})
 
 
 	go r.LogChanOut()
+	go r.SetClose()
 	_ = r.Server.ListenAndServe()
-
-	//_ =http.ListenAndServe(":7070", nil)
-
-
-	//http.Server.Shutdown(context.Background())
 }
 
-func LoginFor(){
-
-}
