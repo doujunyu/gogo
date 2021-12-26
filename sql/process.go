@@ -3,7 +3,7 @@ package sql
 import (
 	"database/sql"
 	"fmt"
-	"gogo/utility"
+	"github.com/doujunyu/gogo/utility"
 	"reflect"
 )
 
