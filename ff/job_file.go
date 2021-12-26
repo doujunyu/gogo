@@ -2,7 +2,7 @@ package ff
 
 import (
 	"errors"
-	"gogo/utility"
+	"github.com/doujunyu/gogo/utility"
 	"os"
 	"path"
 	"strings"

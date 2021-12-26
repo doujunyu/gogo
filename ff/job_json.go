@@ -1,7 +1,7 @@
 package ff
 
 import (
-	"gogo/utility"
+	"github.com/doujunyu/gogo/utility"
 )
 
 // JsonSuccess 返回成功的json格式(data,msg,code)

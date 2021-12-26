@@ -1,7 +1,7 @@
 package ff
 
 import (
-	utility "gogo/utility"
+	utility "github.com/doujunyu/gogo/utility"
 	"os"
 )
 
