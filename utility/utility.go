@@ -1,4 +1,4 @@
-package gogo
+package utility
 
 import "strconv"
 

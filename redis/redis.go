@@ -1,4 +1,4 @@
-package gogo
+package redis
 
 import (
 	"fmt"

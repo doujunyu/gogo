@@ -1,4 +1,4 @@
-package gogo
+package job
 
 import (
 	"encoding/json"

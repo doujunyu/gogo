@@ -1,7 +1,8 @@
-package gogo
+package job
 
 import (
 	"errors"
+	"github.com/doujunyu/gogo/utility"
 	"os"
 	"path"
 	"strings"
@@ -20,7 +21,7 @@ type CheckConfig struct {
 
 // JobNewFile 初始化日志
 func JobNewFile() *Files {
-	root, _ := UrlRootPath()
+	root, _ := utility.UrlRootPath()
 	filesPath := os.Getenv("FILE_PATH")
 	return &Files{
 		Path: root + filesPath,
@@ -53,6 +54,6 @@ func (j *Job) InputFile(FileName string, FilePath string, Check map[string]inter
 		FileName = Check["name"].(string) + path.Ext(handler.Filename)
 	}
 	FilePathName := j.File.Path + "/" + FilePath
-	return FileNew(FilePathName+"/"+FileName, file)
+	return utility.FileNew(FilePathName+"/"+FileName, file)
 
 }

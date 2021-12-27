@@ -1,6 +1,7 @@
-package gogo
+package job
 
 import (
+	"github.com/doujunyu/gogo/utility"
 	"io/ioutil"
 	"log"
 	"os"
@@ -26,7 +27,7 @@ type LogWriteStrings struct {
 
 // JobNewLog 初始化日志
 func JobNewLog(logChan *chan LogWriteStrings) *Log {
-	root, _ := UrlRootPath()
+	root, _ := utility.UrlRootPath()
 	logPath := os.Getenv("LOG_PATH")
 	return &Log{
 		Path:    root + logPath,

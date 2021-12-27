@@ -3,6 +3,7 @@ package gogo
 import (
 	"context"
 	"fmt"
+	"github.com/doujunyu/gogo/job"
 	_ "github.com/joho/godotenv/autoload"
 	"net/http"
 	"time"
@@ -15,18 +16,18 @@ const (
 )
 
 // HandlerFunc 接口需要执行的程序方法
-type HandlerFunc func(util *Job)
+type HandlerFunc func(util *job.Job)
 type GroupFunc func()
 type Centre struct {
-	Middleware   []HandlerFunc         `Testing:"中间件"`
-	LogChan      *chan LogWriteStrings `Testing:"日志写入管道"`
-	Server       *http.Server          `Testing:"http服务"`
+	Middleware   []HandlerFunc             `Testing:"中间件"`
+	LogChan      *chan job.LogWriteStrings `Testing:"日志写入管道"`
+	Server       *http.Server              `Testing:"http服务"`
 	ServerClose  *chan int             `Testing:"关闭服务(传入数据执行关闭操作)"`
 	ServerStatus *int                  `Testing:"阻止外网访问:0=正常,1=禁止,2=系统禁止(在执行关闭服务用到)"`
 }
 
 func ReadyGo() *Centre {
-	logChan := make(chan LogWriteStrings, 1000)
+	logChan := make(chan job.LogWriteStrings, 1000)
 	serverClose := make(chan int, 1)
 	serverStatus := ServerStatusAllow
 	return &Centre{
@@ -37,7 +38,7 @@ func ReadyGo() *Centre {
 		Server: &http.Server{
 			Addr: ":7070",
 			Handler: http.TimeoutHandler(http.DefaultServeMux, time.Second*(60*5), func() string {
-				msg := Message{
+				msg := job.Message{
 					Data: make([]int, 0),
 					Msg:  "操作失败",
 					Code: 1,
@@ -162,7 +163,7 @@ func (c *Centre) SetClose() {
 func (c *Centre) LogChanOut() {
 	for {
 		data := <-*c.LogChan
-		LogWrite(data.Url, data.FileName, data.Prefix, data.Content) //日志内存
+		job.LogWrite(data.Url, data.FileName, data.Prefix, data.Content) //日志内存
 	}
 }
 
@@ -170,9 +171,9 @@ func (c *Centre) LogChanOut() {
 func (c *Centre) httpRequest(relativePath string, route string, HandlerFunc ...HandlerFunc) {
 
 	http.HandleFunc(relativePath, func(w http.ResponseWriter, r *http.Request) {
-		job := &Job{
-			Log:  JobNewLog(c.LogChan), //初始化日志
-			File: JobNewFile(),         //初始化文件
+		job := &job.Job{
+			Log:  job.JobNewLog(c.LogChan), //初始化日志
+			File: job.JobNewFile(),         //初始化文件
 		}
 		defer func() {
 			if err := recover(); err != nil {

@@ -1,4 +1,4 @@
-package gogo
+package cache
 
 import (
 	"sync"
@@ -13,12 +13,11 @@ var cacheData map[string]*cache
 var cacheDataOnce sync.Once
 
 // CacheReady 建立链接,实现单例模式
-func CacheReady() map[string]*cache {
+func init() {
 	cacheDataOnce.Do(func() {
 		data := make(map[string]*cache)
 		cacheData = data
 	})
-	return cacheData
 }
 
 // Set 新增缓存,时间=0表示长期存储

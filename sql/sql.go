@@ -1,4 +1,4 @@
-package gogo
+package sql
 
 import (
 	"database/sql"
