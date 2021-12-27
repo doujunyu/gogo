@@ -35,10 +35,6 @@ func Open() *sql.DB {
 
 // QueryFind 原生查询(sql语句,参数)
 func QueryFind(rows *sql.Rows) ([]map[string]interface{}, error) {
-	//rows, err := Open().Query(toSql, args...)
-	//if err != nil {
-	//	return nil, err
-	//}
 	columns, _ := rows.Columns() //数据的字段
 	columnLength := len(columns)
 	cache := make([]interface{}, columnLength) //临时存储每行数据

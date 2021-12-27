@@ -162,7 +162,6 @@ func (c *Centre) SetClose() {
 func (c *Centre) LogChanOut() {
 	for {
 		data := <-*c.LogChan
-		time.Sleep(time.Second * 2)
 		LogWrite(data.Url, data.FileName, data.Prefix, data.Content) //日志内存
 	}
 }
