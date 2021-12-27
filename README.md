@@ -12,80 +12,14 @@
 1.  go get github.com/doujunyu/gogo
 
 #### 使用说明
-简单示例
+一个简单的实例，更多操作请看同级main.go包
 
 	r := gogo.ReadyGo()//生成配置
-	r.GET("/demo",func(j *gogo.Job){//j.w 和 j.r 是http.ResponseWriter和*http.Request
+	r.GET("/demo",func(j *job.Job){//j.w 和 j.r 是http.ResponseWriter和*http.Request
         j.Log.Error("ceshi","这是一个记录")//记录日志
         j.JsonSuccess(j.Input,"这是信息",0)//返回输出数据,什么都不填会返回code = 0,
 	})
-	go r.LogChanOut()
-	go r.SetClose()
-	_ = r.Server.ListenAndServe()
-数据库操作
-
-    //数据查询
-    r.GET("/demo",func(j *gogo.Job){
-    set := gogo.Db("THIS_TABLE")
-    set.Field("id", "nickname")
-    set.WhereId("3")
-    set.Where("openid", "like", "%4o1Bs%")
-    set.Where("status","!=","1")
-    set.WhereInRaw("id",func(child *gogo.Query,val ...interface{}){
-        child.Table("fs_user_address")
-        child.Field("user_id","path")
-        child.Where("status2","=",2)
-    })
-    set.WhereOrRaw(func(child *gogo.Query,val ...interface{}){
-        child.Where("status3","=",val[0])
-        child.Where("status4","=",val[1])
-        child.WhereBetween("status6",6,6.3)
-        child.WhereOrRaw(func(child *gogo.Query,val ...interface{}){
-            child.Where("status5","=",5)
-        })
-    },3,4)
-    set.OrderBy("id desc")
-    set.PageSize(1,10)
-    data, err := set.FindOnly()
-    if err != nil {
-    j.JsonError()
-    return
-    }
-    j.JsonSuccess(data)
-    })
----
-    //map添加
-    dataMap := make(map[string]interface{})
-    dataMap["user_id"] = 1
-    dataMap["cat_id"] = "123"
-    data,err := gogo.Db("sx_user_like").InsertByMap(&dataMap)
-    //多个添加用切片包起来使用InsertAllByMap
----
-    //结构体添加
-    type Hero struct {
-    UserId int `json:"user_id"`
-    CatId  int `json:"cat_id"`
-    }
-
-    gogo.Db("sx_user_like").InsertByStruct(&Hero{UserId: 1, CatId: 1})
-    //多个添加用切片包起来使用InsertAllByStruct
----
-    //map更改
-    dataMap := make(map[string]interface{})
-    dataMap["user_id"] = 1
-    dataMap["cat_id"] = "123"
-    data ,err := gogo.Db("sx_user_like").WhereId("61454").UpdateByMap(&dataMap)
----
-    //结构体更改
-    hh := Hero{UserId: 1, CatId: 1}
-    data,err :=gogo.Db("sx_user_like").WhereId("61454").UpdateByStruct(&hh)
----
-    //删除
-    set,err :=gogo.Db("sx_user_like").WhereId("61454").Delete()
-    fmt.Println(set,err)
----
-
-缓存操作
+	r.Run(":7070")
 
 
 #### 参与贡献

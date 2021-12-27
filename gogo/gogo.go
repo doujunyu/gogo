@@ -6,6 +6,7 @@ import (
 	"github.com/doujunyu/gogo/job"
 	_ "github.com/joho/godotenv/autoload"
 	"net/http"
+	"os"
 	"time"
 )
 
@@ -27,6 +28,7 @@ type Centre struct {
 }
 
 func ReadyGo() *Centre {
+	//cache.CacheReady()
 	logChan := make(chan job.LogWriteStrings, 1000)
 	serverClose := make(chan int, 1)
 	serverStatus := ServerStatusAllow
@@ -122,6 +124,21 @@ func (c *Centre) VIEW(relativePath string, HandlerFunc ...HandlerFunc) {
 	c.httpRequest(relativePath, "POST", HandlerFunc...)
 }
 
+//启动
+func (c *Centre) Run(addr ...string){
+	go c.LogChanOut() //日志管道处理
+	go c.SetClose() //软关闭服务
+	c.Server.Addr = resolveAddress(addr) //确认端口
+	_ = c.Server.ListenAndServe() //启动
+}
+// LogChanOut 将管道中的记录信息写入日志
+func (c *Centre) LogChanOut() {
+	for {
+		data := <-*c.LogChan
+		job.LogWrite(data.Url, data.FileName, data.Prefix, data.Content) //日志内存
+	}
+}
+
 // SetClose 设置执行关闭服务
 func (c *Centre) SetClose() {
 	<-*c.ServerClose
@@ -159,55 +176,60 @@ func (c *Centre) SetClose() {
 	_ = c.Server.Shutdown(tx)
 }
 
-// LogChanOut 将管道中的记录信息写入日志
-func (c *Centre) LogChanOut() {
-	for {
-		data := <-*c.LogChan
-		job.LogWrite(data.Url, data.FileName, data.Prefix, data.Content) //日志内存
-	}
-}
-
 //根据不同的请求做出判断,私用方法
 func (c *Centre) httpRequest(relativePath string, route string, HandlerFunc ...HandlerFunc) {
 
 	http.HandleFunc(relativePath, func(w http.ResponseWriter, r *http.Request) {
-		job := &job.Job{
+		jobs := &job.Job{
 			Log:  job.JobNewLog(c.LogChan), //初始化日志
 			File: job.JobNewFile(),         //初始化文件
 		}
 		defer func() {
 			if err := recover(); err != nil {
-				job.JsonError(nil, "执行错误", 500)
+				jobs.JsonError(nil, "执行错误", 500)
 				fmt.Println(err)
 				return
 			}
 		}()
 		//接参数
 		r.FormValue("")
-		job.W, job.R = w, r
+		jobs.W, jobs.R = w, r
 		if *c.ServerStatus != ServerStatusAllow { //判断服务器是否允许访问
-			job.JsonError(nil, "服务器停止访问...")
+			jobs.JsonError(nil, "服务器停止访问...")
 			return
 		}
 		//参数赋值
-		job.Input = make(map[string]string)
+		jobs.Input = make(map[string]string)
 		for key, valuse := range r.Form {
-			job.Input[key] = valuse[0]
+			jobs.Input[key] = valuse[0]
 		}
 		//判断请求方式
 		if r.Method != route {
-			job.JsonError(nil, "请求不存在", 404)
+			jobs.JsonError(nil, "请求不存在", 404)
 			return
 		}
 
 		//全局中间件
 		for _, MiddlewareHandlerFunc := range c.Middleware {
-			MiddlewareHandlerFunc(job)
+			MiddlewareHandlerFunc(jobs)
 		}
 		//局部中间件
 		for _, HandlerFuncVal := range HandlerFunc {
-			HandlerFuncVal(job)
+			HandlerFuncVal(jobs)
 		}
-		//sql.Exit()
 	})
+}
+
+func resolveAddress(addr []string) string {
+	switch len(addr) {
+	case 0:
+		if port := os.Getenv("PORT"); port != "" {
+			return ":" + port
+		}
+		return ":8080"
+	case 1:
+		return addr[0]
+	default:
+		panic("too many parameters")
+	}
 }

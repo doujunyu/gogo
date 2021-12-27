@@ -1,6 +1,7 @@
 package cache
 
 import (
+	"fmt"
 	"sync"
 	"time"
 )
@@ -9,19 +10,20 @@ type cache struct {
 	Data interface{}
 }
 
-var cacheData map[string]*cache
-var cacheDataOnce sync.Once
+var CacheData map[string]*cache
+var CacheDataOnce sync.Once
 
 // CacheReady 建立链接,实现单例模式
-func init() {
-	cacheDataOnce.Do(func() {
+func init()  {
+	CacheDataOnce.Do(func() {
 		data := make(map[string]*cache)
-		cacheData = data
+		CacheData = data
 	})
+	//return CacheData
 }
 
 // Set 新增缓存,时间=0表示长期存储
-func Set(name string,second int64,data interface{}) bool {
+func Set(name string,data interface{},second int64) bool {
 	if second != 0{
 		second += time.Now().Unix()
 	}
@@ -29,7 +31,7 @@ func Set(name string,second int64,data interface{}) bool {
 		Time: second ,
 		Data: data,
 	}
-	cacheData[name] = mapData
+	CacheData[name] = mapData
 	return true
 }
 
@@ -41,7 +43,7 @@ func SetTimeCover(name string,second int64) bool{
 	if second != 0{
 		second += time.Now().Unix()
 	}
-	cacheData[name].Time = second
+	CacheData[name].Time = second
 	return true
 }
 
@@ -50,7 +52,7 @@ func SetTimeIncrease(name string,second int64) bool{
 	if Exists(name) {
 		return false
 	}
-	cacheData[name].Time += second
+	CacheData[name].Time += second
 	return true
 }
 
@@ -59,16 +61,16 @@ func SetTimeDecrease(name string,second int64) bool{
 	if Exists(name) {
 		return false
 	}
-	cacheData[name].Time -= second
+	CacheData[name].Time -= second
 	return true
 }
 
 // Get 获取缓存数据
 func Get(name string) interface{}{
-	if Exists(name) {
-		return 0
-	}
-	return cacheData[name].Data
+	//if Exists(name) {
+	//	return 0
+	//}
+	return CacheData[name].Data
 }
 
 // GetTime 获取缓存时间
@@ -76,12 +78,13 @@ func GetTime (name string) int64{
 	if Exists(name) {
 		return 0
 	}
-	return cacheData[name].Time
+	return CacheData[name].Time
 }
 
 // Exists 判断数据是否存在
 func Exists (name string) bool {
-	if cacheData[name] == nil || time.Now().Unix() > cacheData[name].Time {
+	if CacheData[name] == nil || time.Now().Unix() > CacheData[name].Time {
+		fmt.Println(CacheData[name],CacheData[name].Time)
 		return false
 	}
 	return true

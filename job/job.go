@@ -11,7 +11,7 @@ type Job struct {
 	Log   *Log                      //日志
 	File  *Files                    //文件
 	Input map[string]string         //接收的参数
-	LongData map[string]interface{} //跨方法的数据
+	GroupData map[string]interface{} //跨方法的数据
 }
 
 // +----------------------------------------------------------------------
