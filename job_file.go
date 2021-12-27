@@ -1,18 +1,18 @@
-package ff
+package gogo
 
 import (
 	"errors"
-	"github.com/doujunyu/gogo/utility"
 	"os"
 	"path"
 	"strings"
 )
 
+// Files 文件配置
 type Files struct {
-	Path string
+	Path string `Testing:"文件地址(会从项目跟目录开始)"`
 }
 
-//文件上传验证
+// CheckConfig 文件上传验证
 type CheckConfig struct {
 	Size   int64
 	Suffix string
@@ -20,7 +20,7 @@ type CheckConfig struct {
 
 // JobNewFile 初始化日志
 func JobNewFile() *Files {
-	root, _ := utility.UrlRootPath()
+	root, _ := UrlRootPath()
 	filesPath := os.Getenv("FILE_PATH")
 	return &Files{
 		Path: root + filesPath,
@@ -53,6 +53,6 @@ func (j *Job) InputFile(FileName string, FilePath string, Check map[string]inter
 		FileName = Check["name"].(string) + path.Ext(handler.Filename)
 	}
 	FilePathName := j.File.Path + "/" + FilePath
-	return utility.FileNew(FilePathName+"/"+FileName, file)
+	return FileNew(FilePathName+"/"+FileName, file)
 
 }

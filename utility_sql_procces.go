@@ -1,9 +1,8 @@
-package sql
+package gogo
 
 import (
 	"database/sql"
 	"fmt"
-	"github.com/doujunyu/gogo/utility"
 	"reflect"
 )
 
@@ -227,7 +226,7 @@ func (db *Query) OperateFindToSql() {
 func (db *Query) OperateFindField() {
 	db.SqlQuery = "select "
 	if db.RecordField != nil {
-		db.SqlQuery += utility.StringBySliceString(",", db.RecordField) + " "
+		db.SqlQuery += StringBySliceString(",", db.RecordField) + " "
 	} else {
 		db.SqlQuery += "* "
 	}
