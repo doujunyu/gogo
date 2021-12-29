@@ -2,7 +2,7 @@ package sql
 
 import (
 	"database/sql"
-	"fmt"
+	_ "github.com/go-sql-driver/mysql"
 	"os"
 	"sync"
 )
@@ -25,10 +25,12 @@ func Open() *sql.DB {
 		DbDataBase := os.Getenv("DB_DATABASE")
 		DbCharset := os.Getenv("DB_CHARSET")
 		sqlLine, err := sql.Open(DbConnection, DbUserName+":"+DbPassWord+"@tcp("+DbHost+":"+DbPort+")/"+DbDataBase+"?charset="+DbCharset)
-		if err == nil {
-			sendSqlLine = sqlLine
+		if err != nil {
+			sendSqlLine = nil
+			panic(err)
 		}
-		fmt.Println("数据库链接执行")
+		sendSqlLine = sqlLine
+
 	})
 	return sendSqlLine
 }

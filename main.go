@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	//"github.com/doujunyu/gogo/cache"
 	"github.com/doujunyu/gogo/gogo"
 	"github.com/doujunyu/gogo/job"
 	"github.com/doujunyu/gogo/sql"
@@ -13,6 +12,19 @@ import (
 
 func main() {
 	r := gogo.ReadyGo()
+
+	r.GET("/demosql", func(j *job.Job) {
+		set := sql.Db("fs_users")
+		set.Field("id", "nickname")
+		set.OrderBy("id desc")
+		set.PageSize(1,10)
+		data, err := set.Find()
+		if err != nil {
+			j.JsonError(nil,err)
+			return
+		}
+		j.JsonSuccess(data)
+	})
 
 	//简单的例子
 	r.GET("/demo", func(j *job.Job) {

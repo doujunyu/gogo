@@ -190,7 +190,7 @@ func (c *Centre) httpRequest(relativePath string, route string, HandlerFunc ...H
 		defer func() {
 			if err := recover(); err != nil {
 				jobs.JsonError(nil, "执行错误", 500)
-				fmt.Println(err)
+				jobs.Log.Write("请求错误","error",fmt.Sprintf("%v",err))
 				return
 			}
 		}()
