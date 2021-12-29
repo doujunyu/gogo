@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"github.com/doujunyu/gogo/cache"
+	//"github.com/doujunyu/gogo/cache"
 	"github.com/doujunyu/gogo/gogo"
 	"github.com/doujunyu/gogo/job"
 	"github.com/doujunyu/gogo/sql"
@@ -11,10 +11,9 @@ import (
 	"time"
 )
 
-
-
 func main() {
 	r := gogo.ReadyGo()
+
 	//简单的例子
 	r.GET("/demo", func(j *job.Job) {
 		input := j.Input
@@ -67,9 +66,17 @@ func main() {
 	})
 	//缓存
 	r.GET("/cache", func(j *job.Job) {
-		cache.Set(j.Input["name"],j.Input["data"],30)
-		cat := cache.Get(j.Input["name"])
-		j.JsonSuccess(cat)
+		if j.Input["data"] != "" {
+			j.Cache.Set(j.Input["name"],j.Input["data"],5)
+		}
+		data :=  j.Cache.Get(j.Input["name"])
+		if data == nil {
+			j.JsonError(nil,"缓存过期")
+			return
+		}
+		getTime := j.Cache.GetTime(j.Input["name"])
+		datas := []interface{}{data,getTime}
+		j.JsonSuccess(datas)
 	})
 	//软关闭服务
 	r.GET("/over", func(j *job.Job) {
@@ -77,7 +84,7 @@ func main() {
 			j.JsonError(nil,"账号或密码错误")
 			return
 		}
-		*r.ServerClose<-1 //执行关机
+		r.ServerClose<-1 //执行关机
 		j.JsonSuccess(nil,"正在关机")
 	})
 	//文件上传

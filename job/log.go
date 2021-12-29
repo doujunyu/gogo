@@ -12,7 +12,7 @@ import (
 // Log 日志配置
 type Log struct {
 	Path    string                `Testing:"日志的路径"`
-	LogChan *chan LogWriteStrings `Testing:"每次写入的日志通过管道的方式进行生成，避免并行操作"`
+	LogChan chan *LogWriteStrings `Testing:"每次写入的日志通过管道的方式进行生成，避免并行操作"`
 }
 
 //type LogWriteFunc func(string, string, string, string)
@@ -26,12 +26,12 @@ type LogWriteStrings struct {
 }
 
 // JobNewLog 初始化日志
-func JobNewLog(logChan *chan LogWriteStrings) *Log {
+func NewLog() *Log {
 	root, _ := utility.UrlRootPath()
 	logPath := os.Getenv("LOG_PATH")
 	return &Log{
 		Path:    root + logPath,
-		LogChan: logChan,
+		LogChan: make(chan *LogWriteStrings,1000),
 	}
 }
 
@@ -42,13 +42,12 @@ func (l *Log) Error(FileName string, content string) {
 
 // Write 写入日志 (前缀,文件名,内容)(error)
 func (l *Log) Write(prefix string, FileName string, content string) {
-	*l.LogChan <- LogWriteStrings{
+	l.LogChan <- &LogWriteStrings{
 		Url:      l.Path,
 		FileName: FileName,
 		Prefix:   prefix,
 		Content:  content,
 	}
-
 }
 
 // LogWrite 写入日志 (日志路径，日志文件名，内容前缀，内容)
@@ -60,7 +59,12 @@ func LogWrite(url string, fileName string, prefix string, content string) {
 	fileNamePath := path + "/servicing.log"
 	fileInfo, err := os.Stat(fileNamePath)
 	if err == nil {
-		if fileInfo.Size() > int64(1024) {
+		sizeG :=os.Getenv("LOG_FILE_SIZE_G")
+		sizeIntG, err := strconv.ParseInt(sizeG, 10, 64)
+		if err != nil {
+			sizeIntG = int64(1)
+		}
+		if fileInfo.Size() > (sizeIntG * int64(1024576 * 1024)) {
 			files, _ := ioutil.ReadDir(path)
 			_ = os.Rename(fileNamePath, path+"/_"+strconv.Itoa(len(files))+".log")
 		}

@@ -9,6 +9,7 @@ type Job struct {
 	W     http.ResponseWriter
 	R     *http.Request
 	Log   *Log                      //日志
+	Cache *Cache
 	File  *Files                    //文件
 	Input map[string]string         //接收的参数
 	GroupData map[string]interface{} //跨方法的数据
