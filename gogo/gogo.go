@@ -25,9 +25,10 @@ type Centre struct {
 	ServerClose  chan int      `Testing:"关闭服务(传入数据执行关闭操作)"`
 	ServerStatus int           `Testing:"阻止外网访问:0=正常,1=禁止,2=系统禁止(在执行关闭服务用到)"`
 	Server       *http.Server  `Testing:"http服务"`
+	Rests        *map[string]interface{}  `Testing:"其他"`
 }
 
-func ReadyGo() *Centre {
+func ReadyGo(rests map[string]interface{}) *Centre {
 	return &Centre{
 		Middleware:   []HandlerFunc{},
 		Log:          job.NewLog(),
@@ -48,6 +49,7 @@ func ReadyGo() *Centre {
 			WriteTimeout:   10 * time.Second,
 			MaxHeaderBytes: 1 << 20,
 		},
+		Rests : &rests,
 	}
 }
 
@@ -122,7 +124,7 @@ func (c *Centre) VIEW(relativePath string, HandlerFunc ...HandlerFunc) {
 }
 
 // Run 启动
-func (c *Centre) Run(addr ...string) {
+func (c *Centre) Run(addr ...interface{}) {
 	go c.Cache.ChanLongTime()            //缓存
 	go c.LogChanOut()                    //日志管道处理
 	go c.SetClose()                      //软关闭服务
@@ -186,11 +188,12 @@ func (c *Centre) httpRequest(relativePath string, route string, HandlerFunc ...H
 			Log:   c.Log,            //初始化日志
 			Cache: c.Cache,          //换缓
 			File:  job.JobNewFile(), //初始化文件
+			Rests: c.Rests, //其他
 		}
 		defer func() {
 			if err := recover(); err != nil {
 				jobs.JsonError(nil, "执行错误", 500)
-				jobs.Log.Write("请求错误","error",fmt.Sprintf("%v",err))
+				jobs.Log.Write("请求错误", "error", fmt.Sprintf("%v", err))
 				return
 			}
 		}()
@@ -223,12 +226,12 @@ func (c *Centre) httpRequest(relativePath string, route string, HandlerFunc ...H
 	})
 }
 
-func resolveAddress(addr []string) string {
+func resolveAddress(addr []interface{}) string {
 	switch len(addr) {
 	case 0:
 		return ":8080"
 	case 1:
-		return addr[0]
+		return addr[0].(string)
 	default:
 		panic("too many parameters")
 	}

@@ -2,9 +2,9 @@ package sql
 
 import (
 	"database/sql"
-	_ "github.com/go-sql-driver/mysql"
 	"os"
 	"sync"
+	"time"
 )
 
 var sendSqlLine *sql.DB
@@ -29,6 +29,9 @@ func Open() *sql.DB {
 			sendSqlLine = nil
 			panic(err)
 		}
+		sqlLine.SetConnMaxLifetime(time.Minute * 3)
+		sqlLine.SetMaxOpenConns(10)
+		sqlLine.SetMaxIdleConns(10)
 		sendSqlLine = sqlLine
 
 	})
@@ -63,6 +66,7 @@ func QueryFind(rows *sql.Rows) ([]map[string]interface{}, error) {
 		}
 		list = append(list, item)
 	}
+	_ = rows.Close()
 	return list, nil
 }
 

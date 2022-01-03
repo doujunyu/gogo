@@ -5,15 +5,20 @@ import (
 	"github.com/doujunyu/gogo/gogo"
 	"github.com/doujunyu/gogo/job"
 	"github.com/doujunyu/gogo/sql"
+	//_ "github.com/go-sql-driver/mysql"//mysql数据库
+	//_ "github.com/lib/pq"//pg数据库
 	"io/ioutil"
 	"os"
 	"time"
 )
-
 func main() {
-	r := gogo.ReadyGo()
+	aaa := make(map[string]interface{})
+	aaa["HttpName"] = "www.xxx.com"
+	aaa["ServerName"] = "第一个项目"
+	r := gogo.ReadyGo(aaa)
 
 	r.GET("/demosql", func(j *job.Job) {
+		j.Log.Write("前缀","gogo","正常信息")
 		set := sql.Db("fs_users")
 		set.Field("id", "nickname")
 		set.OrderBy("id desc")
@@ -76,6 +81,26 @@ func main() {
 		}
 		j.JsonSuccess(data)
 	})
+	//数据添加
+	r.GET("/SqlTryAdd",func(j *job.Job){
+		//map类型添加
+		dataMap := make(map[string]interface{})
+		dataMap["user_id"] = 1
+		dataMap["cat_id"] = "123"
+		arr := make([]map[string]interface{},2)
+		arr[0] = dataMap
+		arr[1] = dataMap
+		tx := sql.Try()
+		data,err := sql.Db("sx_user_like").Try(tx).InsertAllByMap(&arr)
+		if err != nil {
+			j.JsonError(nil,err)
+			tx.Rollback()
+			return
+		}
+		tx.Commit()
+		j.JsonSuccess(data)
+	})
+
 	//缓存
 	r.GET("/cache", func(j *job.Job) {
 		if j.Input["data"] != "" {
