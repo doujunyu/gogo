@@ -2,8 +2,10 @@ package main
 
 import (
 	"fmt"
+	"github.com/doujunyu/gogo/cache"
 	"github.com/doujunyu/gogo/gogo"
 	"github.com/doujunyu/gogo/job"
+	"github.com/doujunyu/gogo/log"
 	"github.com/doujunyu/gogo/sql"
 	//_ "github.com/go-sql-driver/mysql"//mysql数据库
 	//_ "github.com/lib/pq"//pg数据库
@@ -12,13 +14,37 @@ import (
 	"time"
 )
 func main() {
-	aaa := make(map[string]interface{})
-	aaa["HttpName"] = "www.xxx.com"
-	aaa["ServerName"] = "第一个项目"
-	r := gogo.ReadyGo(aaa)
+	//缓存
+	fmt.Println(string([]uint8{123, 34, 99, 111, 100, 101, 34, 58, 53, 48, 48, 44, 34, 109, 115, 103, 34, 58, 34, 230, 160, 188, 229, 188, 143, 228, 184, 141, 229, 144, 136, 230, 179, 149, 34, 44, 34, 100, 97, 116, 97, 34, 58, 91, 93, 125}))
+	//
+	//url := []string{"/demo","/bar","doudou"}
+	//for _, val := range url {
+	//	go func (val string){
+	//		http.HandleFunc(val, func(w http.ResponseWriter, r *http.Request) {
+	//			fmt.Println(val)
+	//			fmt.Fprintf(w, "Hello, %q", html.EscapeString(r.URL.Path))
+	//		})
+	//	}(val)
+	//
+	//}
+	//
+	//log.Fatal(http.ListenAndServe(":8000", nil))
+	//return
+	//demo1 := make(map[string]map[string][]string)
+	//demo2 := make(map[string][]string)
+	//
+	//demo2["2"] = []string{"sss","bbb"}
+	//demo1["sdfs"] = demo2
+	//
+	//
+	////demo1["1"]["3"] = []string{"sss","bbb"}
+	////demo1["1"]["4"] = []string{"sss","bbb"}
+	//fmt.Println(demo1)
+	//return
 
+	r := gogo.ReadyGo()
 	r.GET("/demosql", func(j *job.Job) {
-		j.Log.Write("前缀","gogo","正常信息")
+		log.Write("前缀","gogo","正常信息")
 		set := sql.Db("fs_users")
 		set.Field("id", "nickname")
 		set.OrderBy("id desc")
@@ -34,22 +60,28 @@ func main() {
 	//简单的例子
 	r.GET("/demo", func(j *job.Job) {
 		input := j.Input
-		j.Log.Error("demo","记录一条错误信息")
-		j.Log.Write("前缀","gogo","正常信息")
-		j.JsonSuccess(input)
+		log.Error("demo","记录一条错误信息")
+		//log.Write("前缀","gogo","正常信息")
+		j.JsonSuccess(input,"这里是get提交")
+	})
+	r.POST("/demo", func(j *job.Job) {
+		//input := j.Input
+		log.Error("demo","记录一条错误信息")
+		log.Write("前缀","gogo","正常信息")
+		j.JsonSuccess(nil,"这里是post提交")
 	})
 	//之前中间件
 	r.GET("/beforeGroup",group, func(j *job.Job) {
 		input := j.Input
-		j.Log.Error("demo","记录一条错误信息")
-		j.Log.Write("前缀","gogo","正常信息")
+		log.Error("demo","记录一条错误信息")
+		log.Write("前缀","gogo","正常信息")
 		j.JsonSuccess(input)
 	})
 	//之后中间件
 	r.GET("/laterGroup", func(j *job.Job) {
 		input := j.Input
-		j.Log.Error("demo","记录一条错误信息")
-		j.Log.Write("前缀","gogo","正常信息")
+		log.Error("demo","记录一条错误信息")
+		log.Write("前缀","gogo","正常信息")
 		j.JsonSuccess(input)
 	},group)
 	//数据库查询
@@ -100,18 +132,18 @@ func main() {
 		tx.Commit()
 		j.JsonSuccess(data)
 	})
-
 	//缓存
 	r.GET("/cache", func(j *job.Job) {
 		if j.Input["data"] != "" {
-			j.Cache.Set(j.Input["name"],j.Input["data"],5)
+
+			cache.Set(j.Input["name"],j.Input["data"],5)
 		}
-		data :=  j.Cache.Get(j.Input["name"])
+		data :=  cache.Get(j.Input["name"])
 		if data == nil {
 			j.JsonError(nil,"缓存过期")
 			return
 		}
-		getTime := j.Cache.GetTime(j.Input["name"])
+		getTime := cache.GetTime(j.Input["name"])
 		datas := []interface{}{data,getTime}
 		j.JsonSuccess(datas)
 	})
@@ -121,7 +153,7 @@ func main() {
 			j.JsonError(nil,"账号或密码错误")
 			return
 		}
-		r.ServerClose<-1 //执行关机
+		//r.ServerClose<-1 //执行关机
 		j.JsonSuccess(nil,"正在关机")
 	})
 	//文件上传
@@ -148,8 +180,8 @@ func main() {
 		buff, _ := ioutil.ReadAll(file)
 		_,_ = j.W.Write(buff)
 	})
+	r.Run(":8000")
 
-	r.Run(":7070")
 }
 
 func group(j *job.Job){
