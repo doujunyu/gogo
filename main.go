@@ -14,33 +14,6 @@ import (
 	"time"
 )
 func main() {
-	//缓存
-	fmt.Println(string([]uint8{123, 34, 99, 111, 100, 101, 34, 58, 53, 48, 48, 44, 34, 109, 115, 103, 34, 58, 34, 230, 160, 188, 229, 188, 143, 228, 184, 141, 229, 144, 136, 230, 179, 149, 34, 44, 34, 100, 97, 116, 97, 34, 58, 91, 93, 125}))
-	//
-	//url := []string{"/demo","/bar","doudou"}
-	//for _, val := range url {
-	//	go func (val string){
-	//		http.HandleFunc(val, func(w http.ResponseWriter, r *http.Request) {
-	//			fmt.Println(val)
-	//			fmt.Fprintf(w, "Hello, %q", html.EscapeString(r.URL.Path))
-	//		})
-	//	}(val)
-	//
-	//}
-	//
-	//log.Fatal(http.ListenAndServe(":8000", nil))
-	//return
-	//demo1 := make(map[string]map[string][]string)
-	//demo2 := make(map[string][]string)
-	//
-	//demo2["2"] = []string{"sss","bbb"}
-	//demo1["sdfs"] = demo2
-	//
-	//
-	////demo1["1"]["3"] = []string{"sss","bbb"}
-	////demo1["1"]["4"] = []string{"sss","bbb"}
-	//fmt.Println(demo1)
-	//return
 
 	r := gogo.ReadyGo()
 	r.GET("/demosql", func(j *job.Job) {
