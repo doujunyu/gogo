@@ -1,19 +1,15 @@
 package main
 
 import (
+	"database/sql"
 	"fmt"
 	"github.com/doujunyu/gogo/cache"
 	"github.com/doujunyu/gogo/gogo"
 	"github.com/doujunyu/gogo/job"
 	"github.com/doujunyu/gogo/log"
 	"github.com/doujunyu/gogo/sql_aid"
-
-	//"github.com/doujunyu/gogo/sql"
-	//"github.com/lib/pq"
-
-	"database/sql"
-	_ "github.com/go-sql-driver/mysql"//mysql数据库
-	_ "github.com/lib/pq" //pg数据库
+	//_ "github.com/go-sql-driver/mysql"//mysql数据库
+	//_ "github.com/lib/pq" //pg数据库
 	"io/ioutil"
 	"os"
 	"time"
