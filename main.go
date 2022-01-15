@@ -8,6 +8,7 @@ import (
 	"github.com/doujunyu/gogo/job"
 	"github.com/doujunyu/gogo/log"
 	"github.com/doujunyu/gogo/sql_aid"
+
 	//_ "github.com/go-sql-driver/mysql"//mysql数据库
 	//_ "github.com/lib/pq" //pg数据库
 	"io/ioutil"
@@ -20,8 +21,9 @@ var PGSqlLine *sql.DB
 func main() {
 	//链接数pgsql
 	pgsql,err := sql_aid.Open("postgres",os.Getenv("PGSQL_URL"))
+	fmt.Println(os.Getenv("PGSQL_URL"))
 	if err != nil {
-		fmt.Println("数据路链接错误")
+		fmt.Println("数据路链接错误",err)
 		return
 	}
 	PGSqlLine = pgsql
@@ -39,6 +41,9 @@ func main() {
 	MySqlLine.SetMaxOpenConns(10)
 	MySqlLine.SetMaxIdleConns(10)
 
+
+
+
 	r := gogo.ReadyGo()
 	r.GET("/demosql", func(j *job.Job) {
 		log.Write("前缀","gogo","正常信息")
@@ -46,8 +51,8 @@ func main() {
 		data["user_id"] = 1
 		data["cat_id"] = 1
 
-		set,slic := sql_aid.Table("sx_user_like").InsertByMap(&data)//生成sql语句
-		tx,err := MySqlLine.Begin()//开启事务
+		set,slic := sql_aid.MyTable("sx_user_like").InsertByMap(&data) //生成sql语句
+		tx,err := MySqlLine.Begin()                             //开启事务
 		defer tx.Rollback()
 		datas,err := tx.Exec(set,slic...)//进行添加
 		lists := make([]int,1)//开始写让程序报错
@@ -56,7 +61,7 @@ func main() {
 		err = tx.Commit()
 
 		fmt.Println(datas,err)
-		//fmt.Println(datas.LastInsertId())
+		fmt.Println(datas.LastInsertId())
 		if err != nil{
 			j.JsonError(nil,err.Error())
 		}
