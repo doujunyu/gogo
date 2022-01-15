@@ -1,23 +1,22 @@
-package sql
+package sql_aid
 
 import (
-	"database/sql"
-	"fmt"
 	"github.com/doujunyu/gogo/utility"
 	"reflect"
+	"strings"
 )
 
 type Query struct {
 	RecordTable   string        `json:"record_table" Testing:"表明"`
 	RecordField   []string      `json:"record_field" Testing:"字段"`
-	RecordOrder   string        `json:"record_order" Testing:"排序"`
-	RecordGroup   string        `json:"record_group" Testing:"分组"`
+	RecordOrder   []string        `json:"record_order" Testing:"排序"`
+	RecordGroup   []string        `json:"record_group" Testing:"分组"`
 	RecordPage    int           `json:"record_page" Testing:"页数"`
 	RecordSize    int           `json:"record_size" Testing:"每页数据量"`
 	SqlQuery      string        `json:"sql_query,string" Testing:"sql语句"`
 	WhereSqlQuery string        `json:"where_sql_query" Testing:"sql条件"`
 	Args          []interface{} `json:"args" Testing:"值"`
-	Tx            *sql.Tx
+
 }
 type ChildQuery func(*Query, ...interface{})
 
@@ -27,26 +26,9 @@ type ChildQuery func(*Query, ...interface{})
 
 //查询数据方法
 
-func (db *Query) Find() ([]map[string]interface{}, error) {
+func (db *Query) ToSql() (string, []interface{}) {
 	db.OperateFindToSql()
-	var rows *sql.Rows
-	var err error
-	if db.Tx != nil {
-		rows, err = db.Tx.Query(db.SqlQuery, db.Args...)
-	} else {
-		rows, err = Open().Query(db.SqlQuery, db.Args...)
-	}
-	if err != nil {
-		return nil, err
-	}
-	return QueryFind(rows)
-}
-func (db *Query) FindOnly() (map[string]interface{}, error) {
-	data, err := db.Find()
-	if err != nil {
-		return nil, err
-	}
-	return data[0], nil
+	return db.SqlQuery, db.Args
 }
 
 //查询固定方法
@@ -63,55 +45,32 @@ func (db *Query) Field(field ...string) *Query {
 	return db
 }
 func (db *Query) OrderBy(Order string) *Query {
-	db.RecordOrder = "order by " + Order + " "
+	db.RecordOrder = append(db.RecordOrder,Order)
 	return db
 }
 func (db *Query) GroupBy(groupBy string) *Query {
-	db.RecordOrder = "GROUP BY `" + groupBy + "` "
+	db.RecordGroup = append(db.RecordGroup,groupBy)
 	return db
 }
 
 //where条件
 
-func (db *Query) Where(field string, condition string, val interface{}) *Query {
+func (db *Query) Where(field string, val interface{}) *Query {
 	if db.WhereSqlQuery != "" {
 		db.WhereSqlQuery += "and "
 	}
-	db.WhereSqlQuery += "`" + field + "` " + condition + " ? "
+	db.WhereSqlQuery += field
 	db.Args = append(db.Args, val)
 	return db
 }
-func (db *Query) WhereRaw(childQuery ChildQuery, val ...interface{}) *Query {
-	db.WhereSqlQuery += "and ("
-	check := &Query{}
-	childQuery(check, val...)
-	if check.SqlQuery != "" {
-		check.SqlQuery += check.SqlQuery + "where " + check.WhereSqlQuery
-	} else {
-		check.SqlQuery += check.WhereSqlQuery
+func (db *Query) WhereOr(field string, val interface{}) *Query {
+	if db.WhereSqlQuery != "" {
+		db.WhereSqlQuery += "and "
+	}else{
+		db.WhereSqlQuery += "OR "
 	}
-	db.WhereSqlQuery += check.SqlQuery
-	for _, val := range check.Args {
-		db.Args = append(db.Args, val)
-	}
-	db.WhereSqlQuery += ") "
-	return db
-}
-func (db *Query) WhereOr(field string, condition string, val interface{}) *Query {
-	db.WhereSqlQuery += "OR (`" + field + "` " + condition + " ?) "
+	db.WhereSqlQuery += "(" + field + ") "
 	db.Args = append(db.Args, val)
-	return db
-}
-func (db *Query) WhereOrRaw(childQuery ChildQuery, val ...interface{}) *Query {
-	db.WhereSqlQuery += "OR ("
-	check := &Query{}
-	childQuery(check, val...)
-	check.OperateFindToSql()
-	db.WhereSqlQuery += check.SqlQuery
-	for _, val := range check.Args {
-		db.Args = append(db.Args, val)
-	}
-	db.WhereSqlQuery += ") "
 	return db
 }
 func (db *Query) WhereIn(field string, condition ...interface{}) *Query {
@@ -119,11 +78,51 @@ func (db *Query) WhereIn(field string, condition ...interface{}) *Query {
 		db.WhereSqlQuery += "and "
 	}
 	db.WhereSqlQuery += "`" + field + "` in ("
-	for _, val := range condition {
+	for _, _ = range condition {
 		db.WhereSqlQuery += "?,"
-		db.Args = append(db.Args, val)
 	}
 	db.WhereSqlQuery = db.WhereSqlQuery[:len(db.WhereSqlQuery)-1]
+	db.WhereSqlQuery += ") "
+	db.Args = append(db.Args, condition...)
+	return db
+}
+func (db *Query) WhereNotIn(field string, condition ...interface{}) *Query {
+	if db.WhereSqlQuery != "" {
+		db.WhereSqlQuery += "and "
+	}
+	db.WhereSqlQuery += "`" + field + "` not in ("
+	for _, _ = range condition {
+		db.WhereSqlQuery += "?,"
+	}
+	db.WhereSqlQuery = db.WhereSqlQuery[:len(db.WhereSqlQuery)-1]
+	db.WhereSqlQuery += ") "
+	db.Args = append(db.Args, condition...)
+	return db
+}
+func (db *Query) WhereRaw(childQuery ChildQuery, val ...interface{}) *Query {
+	if db.WhereSqlQuery != "" {
+		db.WhereSqlQuery += "and "
+	}
+	db.WhereSqlQuery += "("
+	check := &Query{}
+	childQuery(check, val...)
+	checkSql,args := check.ToSql()
+	db.WhereSqlQuery += checkSql
+	db.Args = append(db.Args, args...)
+	db.WhereSqlQuery += ") "
+	return db
+}
+func (db *Query) WhereOrRaw(childQuery ChildQuery, val ...interface{}) *Query {
+	if db.WhereSqlQuery != "" {
+		db.WhereSqlQuery += "and ("
+	}else{
+		db.WhereSqlQuery += "( "
+	}
+	check := &Query{}
+	childQuery(check, val...)
+	checkSql,args := check.ToSql()
+	db.WhereSqlQuery += checkSql
+	db.Args = append(db.Args, args...)
 	db.WhereSqlQuery += ") "
 	return db
 }
@@ -134,24 +133,9 @@ func (db *Query) WhereInRaw(field string, childQuery ChildQuery, val ...interfac
 	db.WhereSqlQuery += "`" + field + "` in ("
 	check := &Query{}
 	childQuery(check, val...)
-	check.OperateFindToSql()
-	db.WhereSqlQuery += check.SqlQuery
-	for _, val := range check.Args {
-		db.Args = append(db.Args, val)
-	}
-	db.WhereSqlQuery += ") "
-	return db
-}
-func (db *Query) WhereNotIn(field string, condition ...interface{}) *Query {
-	if db.WhereSqlQuery != "" {
-		db.WhereSqlQuery += "and "
-	}
-	db.WhereSqlQuery += "`" + field + "` not in ("
-	for _, val := range condition {
-		db.WhereSqlQuery += "?,"
-		db.Args = append(db.Args, val)
-	}
-	db.WhereSqlQuery = db.WhereSqlQuery[:len(db.WhereSqlQuery)-1]
+	checkSql,args := check.ToSql()
+	db.WhereSqlQuery += checkSql
+	db.Args = append(db.Args, args...)
 	db.WhereSqlQuery += ") "
 	return db
 }
@@ -159,33 +143,13 @@ func (db *Query) WhereNotInRaw(field string, childQuery ChildQuery, val ...inter
 	if db.WhereSqlQuery != "" {
 		db.WhereSqlQuery += "and "
 	}
-	db.WhereSqlQuery += "`" + field + "` not in ("
+	db.WhereSqlQuery += "`" + field + "`not in ("
 	check := &Query{}
 	childQuery(check, val...)
-	check.OperateFindToSql()
-	db.WhereSqlQuery += check.SqlQuery
-	for _, val := range check.Args {
-		db.Args = append(db.Args, val)
-	}
+	checkSql,args := check.ToSql()
+	db.WhereSqlQuery += checkSql
+	db.Args = append(db.Args, args...)
 	db.WhereSqlQuery += ") "
-	return db
-}
-func (db *Query) WhereBetween(field string, begin interface{}, over interface{}) *Query {
-	if db.WhereSqlQuery != "" {
-		db.WhereSqlQuery += "and ("
-	}
-	db.WhereSqlQuery += "`" + field + "` BETWEEN ? AND ?) "
-	db.Args = append(db.Args, begin)
-	db.Args = append(db.Args, over)
-	return db
-}
-func (db *Query) WhereNotBetween(field string, begin interface{}, over interface{}) *Query {
-	if db.WhereSqlQuery != "" {
-		db.WhereSqlQuery += "and ("
-	}
-	db.WhereSqlQuery += "`" + field + "` NOT BETWEEN ? AND ?) "
-	db.Args = append(db.Args, begin)
-	db.Args = append(db.Args, over)
 	return db
 }
 func (db *Query) WhereId(id string) *Query {
@@ -199,13 +163,6 @@ func (db *Query) WhereId(id string) *Query {
 func (db *Query) PageSize(page int, size int) *Query {
 	db.RecordPage = page
 	db.RecordSize = size
-	return db
-}
-func (db *Query) Raw(field string, args ...interface{}) *Query {
-	db.WhereSqlQuery += field
-	for _, val := range args {
-		db.Args = append(db.Args, val)
-	}
 	return db
 }
 
@@ -236,11 +193,16 @@ func (db *Query) OperateFindTable() {
 	db.SqlQuery += "FROM " + db.RecordTable + " "
 }
 func (db *Query) OperateFindGroupBy() {
-	db.SqlQuery += db.RecordGroup
+	if db.RecordGroup != nil{
+		db.SqlQuery += "GROUP BY " + strings.Join(db.RecordGroup,",") + " "
+	}
 }
 func (db *Query) OperateFindOrderBy() {
-	db.SqlQuery += db.RecordOrder
+	if db.RecordOrder != nil{
+		db.SqlQuery += "ORDER BY " + strings.Join(db.RecordOrder,",") + " "
+	}
 }
+
 func (db *Query) OperateFindPageSize() {
 	if db.RecordPage != 0 {
 		if db.RecordSize == 0 {
@@ -258,23 +220,17 @@ func (db *Query) OperateFindPageSize() {
 // | 添加方法
 // +----------------------------------------------------------------------
 
-func (db *Query) InsertByMap(data *map[string]interface{}) (sql.Result, error) {
+func (db *Query) InsertByMap(data *map[string]interface{}) (string,[]interface{}) {
 	db.OperateInsertTable()
 	db.OperateInsertDataByMap(data)
-	if db.Tx != nil {
-		return db.Tx.Exec(db.SqlQuery, db.Args...)
-	}
-	return Open().Exec(db.SqlQuery, db.Args...)
+	return db.SqlQuery, db.Args
 }
-func (db *Query) InsertByStruct(data interface{}) (sql.Result, error) {
+func (db *Query) InsertByStruct(data interface{}) (string,[]interface{}) {
 	db.OperateInsertTable()
 	db.OperateInsertDataByStruct(data)
-	if db.Tx != nil {
-		return db.Tx.Exec(db.SqlQuery, db.Args...)
-	}
-	return Open().Exec(db.SqlQuery, db.Args...)
+	return db.SqlQuery, db.Args
 }
-func (db *Query) InsertAllByMap(datas *[]map[string]interface{}) (sql.Result, error) {
+func (db *Query) InsertAllByMap(datas *[]map[string]interface{}) (string,[]interface{}) {
 	db.OperateInsertTable()
 	for key, val := range *datas {
 		if key == 0 {
@@ -283,12 +239,10 @@ func (db *Query) InsertAllByMap(datas *[]map[string]interface{}) (sql.Result, er
 			db.OperateInsertDataByMapValue(&val)
 		}
 	}
-	if db.Tx != nil {
-		return db.Tx.Exec(db.SqlQuery, db.Args...)
-	}
-	return Open().Exec(db.SqlQuery, db.Args...)
+	return db.SqlQuery, db.Args
+
 }
-func (db *Query) InsertAllByStruct(datas []interface{}) (sql.Result, error) {
+func (db *Query) InsertAllByStruct(datas []interface{}) (string,[]interface{}) {
 	db.OperateInsertTable()
 	for key, val := range datas {
 		if key == 0 {
@@ -297,10 +251,8 @@ func (db *Query) InsertAllByStruct(datas []interface{}) (sql.Result, error) {
 			db.OperateInsertDataByStructValue(val)
 		}
 	}
-	if db.Tx != nil {
-		return db.Tx.Exec(db.SqlQuery, db.Args...)
-	}
-	return Open().Exec(db.SqlQuery, db.Args...)
+	return db.SqlQuery, db.Args
+
 
 }
 
@@ -382,26 +334,19 @@ func (db *Query) OperateInsertDataByStructValue(data interface{}) {
 		values = values[:len(values)-1]
 		db.SqlQuery += values + ")"
 	}
-	fmt.Println(db.SqlQuery, db.Args)
 }
 
 // +----------------------------------------------------------------------
 // | 更改方法
 // +----------------------------------------------------------------------
 
-func (db *Query) UpdateByMap(data *map[string]interface{}) (sql.Result, error) {
+func (db *Query) UpdateByMap(data *map[string]interface{}) (string,[]interface{}) {
 	db.OperateUpdateByMapData(data)
-	if db.Tx != nil {
-		return db.Tx.Exec(db.SqlQuery, db.Args...)
-	}
-	return Open().Exec(db.SqlQuery, db.Args...)
+	return db.SqlQuery, db.Args
 }
-func (db *Query) UpdateByStruct(data interface{}) (sql.Result, error) {
+func (db *Query) UpdateByStruct(data interface{}) (string,[]interface{}) {
 	db.OperateUpdateByStructData(data)
-	if db.Tx != nil {
-		return db.Tx.Exec(db.SqlQuery, db.Args...)
-	}
-	return Open().Exec(db.SqlQuery, db.Args...)
+	return db.SqlQuery, db.Args
 }
 
 //整理更改查询的sql和参数
@@ -455,12 +400,9 @@ func (db *Query) OperateUpdateByStructData(data interface{}) {
 // +----------------------------------------------------------------------
 
 // Delete 删除方法
-func (db *Query) Delete() (sql.Result, error) {
+func (db *Query) Delete() (string,[]interface{}) {
 	db.OperateDeleteData()
-	if db.Tx != nil {
-		return db.Tx.Exec(db.SqlQuery, db.Args...)
-	}
-	return Open().Exec(db.SqlQuery, db.Args...)
+	return db.SqlQuery, db.Args
 }
 
 // OperateDeleteData 整理删除查询的sql和参数
@@ -476,7 +418,8 @@ func (db *Query) OperateDeleteData() {
 // | 事务
 // +----------------------------------------------------------------------
 
-func (db *Query) Try(tx *sql.Tx) *Query {
-	db.Tx = tx
-	return db
+func Table(table string) *Query {
+	return &Query{
+		RecordTable: table,
+	}
 }

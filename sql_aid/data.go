@@ -1,45 +1,25 @@
-package sql
+package sql_aid
 
 import (
 	"database/sql"
-	"os"
-	"sync"
-	"time"
 )
 
-var sendSqlLine *sql.DB
-var sendSqlLineOnce sync.Once
 
 // +----------------------------------------------------------------------
 // | 包函数
 // +----------------------------------------------------------------------
 
 // Open 建立链接,,实现单例模式
-func Open() *sql.DB {
-	sendSqlLineOnce.Do(func() {
-		DbConnection := os.Getenv("DB_CONNECTION")
-		DbHost := os.Getenv("DB_HOST")
-		DbPort := os.Getenv("DB_PORT")
-		DbUserName := os.Getenv("DB_USERNAME")
-		DbPassWord := os.Getenv("DB_PASSWORD")
-		DbDataBase := os.Getenv("DB_DATABASE")
-		DbCharset := os.Getenv("DB_CHARSET")
-		sqlLine, err := sql.Open(DbConnection, DbUserName+":"+DbPassWord+"@tcp("+DbHost+":"+DbPort+")/"+DbDataBase+"?charset="+DbCharset)
-		if err != nil {
-			sendSqlLine = nil
-			panic(err)
-		}
-		sqlLine.SetConnMaxLifetime(time.Minute * 3)
-		sqlLine.SetMaxOpenConns(10)
-		sqlLine.SetMaxIdleConns(10)
-		sendSqlLine = sqlLine
-
-	})
-	return sendSqlLine
+func Open(sqlType string,databaseLine string) (*sql.DB,error) {
+	sendMySqlLine, err := sql.Open(sqlType, databaseLine)
+	if err != nil {
+		return nil,err
+	}
+	return sendMySqlLine,nil
 }
 
-// QueryFind 原生查询(sql语句,参数)
-func QueryFind(rows *sql.Rows) ([]map[string]interface{}, error) {
+// DataToMap 处理数据
+func DataToMap(rows *sql.Rows) ([]map[string]interface{}, error) {
 	columns, _ := rows.Columns() //数据的字段
 	columnLength := len(columns)
 	cache := make([]interface{}, columnLength) //临时存储每行数据
@@ -69,23 +49,3 @@ func QueryFind(rows *sql.Rows) ([]map[string]interface{}, error) {
 	_ = rows.Close()
 	return list, nil
 }
-
-// Db DB方法
-func Db(Table string) *Query {
-	return &Query{
-		RecordTable: Table,
-		Tx:          nil,
-	}
-}
-
-func Try() *sql.Tx {
-	tx, err := Open().Begin()
-	if err != nil {
-		return nil
-	}
-	return tx
-}
-
-// +----------------------------------------------------------------------
-// | 结构体接口,进行拼接数据
-// +----------------------------------------------------------------------

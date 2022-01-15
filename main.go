@@ -6,28 +6,65 @@ import (
 	"github.com/doujunyu/gogo/gogo"
 	"github.com/doujunyu/gogo/job"
 	"github.com/doujunyu/gogo/log"
-	"github.com/doujunyu/gogo/sql"
-	//_ "github.com/go-sql-driver/mysql"//mysql数据库
-	//_ "github.com/lib/pq"//pg数据库
+	"github.com/doujunyu/gogo/sql_aid"
+
+	//"github.com/doujunyu/gogo/sql"
+	//"github.com/lib/pq"
+
+	"database/sql"
+	_ "github.com/go-sql-driver/mysql"//mysql数据库
+	_ "github.com/lib/pq" //pg数据库
 	"io/ioutil"
 	"os"
 	"time"
 )
+
+var MySqlLine *sql.DB
+var PGSqlLine *sql.DB
 func main() {
+	//链接数pgsql
+	pgsql,err := sql_aid.Open("postgres",os.Getenv("PGSQL_URL"))
+	if err != nil {
+		fmt.Println("数据路链接错误")
+		return
+	}
+	PGSqlLine = pgsql
+	PGSqlLine.SetConnMaxLifetime(time.Minute * 3)
+	PGSqlLine.SetMaxOpenConns(10)
+	PGSqlLine.SetMaxIdleConns(10)
+	//链接mysql
+	mysql, err := sql.Open("mysql", os.Getenv("MYSQL_URL"))
+	if err != nil {
+		fmt.Println("数据路链接错误")
+		return
+	}
+	MySqlLine = mysql
+	MySqlLine.SetConnMaxLifetime(time.Minute * 3)
+	MySqlLine.SetMaxOpenConns(10)
+	MySqlLine.SetMaxIdleConns(10)
 
 	r := gogo.ReadyGo()
 	r.GET("/demosql", func(j *job.Job) {
 		log.Write("前缀","gogo","正常信息")
-		set := sql.Db("fs_users")
-		set.Field("id", "nickname")
-		set.OrderBy("id desc")
-		set.PageSize(1,10)
-		data, err := set.Find()
-		if err != nil {
-			j.JsonError(nil,err)
-			return
+		data := make(map[string]interface{})
+		data["user_id"] = 1
+		data["cat_id"] = 1
+
+		set,slic := sql_aid.Table("sx_user_like").InsertByMap(&data)//生成sql语句
+		tx,err := MySqlLine.Begin()//开启事务
+		defer tx.Rollback()
+		datas,err := tx.Exec(set,slic...)//进行添加
+		lists := make([]int,1)//开始写让程序报错
+		lists[0] = 1
+		lists[2] = 1
+		err = tx.Commit()
+
+		fmt.Println(datas,err)
+		//fmt.Println(datas.LastInsertId())
+		if err != nil{
+			j.JsonError(nil,err.Error())
 		}
-		j.JsonSuccess(data)
+		j.JsonSuccess()
 	})
 
 	//简单的例子
@@ -58,53 +95,53 @@ func main() {
 		j.JsonSuccess(input)
 	},group)
 	//数据库查询
-	r.GET("/SqlFind", func(j *job.Job) {
-		set := sql.Db("THIS_TABLE")
-		set.Field("id", "nickname")
-		set.WhereId("3")
-		set.Where("openid", "like", "%4o1Bs%")
-		set.Where("status","!=","1")
-		set.WhereInRaw("id",func(child *sql.Query,val ...interface{}){
-			child.Table("fs_user_address")
-			child.Field("user_id","path")
-			child.Where("status2","=",2)
-		})
-		set.WhereOrRaw(func(child *sql.Query,val ...interface{}){
-			child.Where("status3","=",val[0])
-			child.Where("status4","=",val[1])
-			child.WhereBetween("status6",6,6.3)
-			child.WhereOrRaw(func(child *sql.Query,val ...interface{}){
-				child.Where("status5","=",5)
-			})
-		},3,4)
-		set.OrderBy("id desc")
-		set.PageSize(1,10)
-		data, err := set.FindOnly()
-		if err != nil {
-			j.JsonError()
-			return
-		}
-		j.JsonSuccess(data)
-	})
-	//数据添加
-	r.GET("/SqlTryAdd",func(j *job.Job){
-		//map类型添加
-		dataMap := make(map[string]interface{})
-		dataMap["user_id"] = 1
-		dataMap["cat_id"] = "123"
-		arr := make([]map[string]interface{},2)
-		arr[0] = dataMap
-		arr[1] = dataMap
-		tx := sql.Try()
-		data,err := sql.Db("sx_user_like").Try(tx).InsertAllByMap(&arr)
-		if err != nil {
-			j.JsonError(nil,err)
-			tx.Rollback()
-			return
-		}
-		tx.Commit()
-		j.JsonSuccess(data)
-	})
+	//r.GET("/SqlFind", func(j *job.Job) {
+	//	set := sql.Db("THIS_TABLE")
+	//	set.Field("id", "nickname")
+	//	set.WhereId("3")
+	//	set.Where("openid", "like", "%4o1Bs%")
+	//	set.Where("status","!=","1")
+	//	set.WhereInRaw("id",func(child *sql.Query,val ...interface{}){
+	//		child.Table("fs_user_address")
+	//		child.Field("user_id","path")
+	//		child.Where("status2","=",2)
+	//	})
+	//	set.WhereOrRaw(func(child *sql.Query,val ...interface{}){
+	//		child.Where("status3","=",val[0])
+	//		child.Where("status4","=",val[1])
+	//		child.WhereBetween("status6",6,6.3)
+	//		child.WhereOrRaw(func(child *sql.Query,val ...interface{}){
+	//			child.Where("status5","=",5)
+	//		})
+	//	},3,4)
+	//	set.OrderBy("id desc")
+	//	set.PageSize(1,10)
+	//	data, err := set.FindOnly()
+	//	if err != nil {
+	//		j.JsonError()
+	//		return
+	//	}
+	//	j.JsonSuccess(data)
+	//})
+	////数据添加
+	//r.GET("/SqlTryAdd",func(j *job.Job){
+	//	//map类型添加
+	//	dataMap := make(map[string]interface{})
+	//	dataMap["user_id"] = 1
+	//	dataMap["cat_id"] = "123"
+	//	arr := make([]map[string]interface{},2)
+	//	arr[0] = dataMap
+	//	arr[1] = dataMap
+	//	tx := sql.Try()
+	//	data,err := sql.Db("sx_user_like").Try(tx).InsertAllByMap(&arr)
+	//	if err != nil {
+	//		j.JsonError(nil,err)
+	//		tx.Rollback()
+	//		return
+	//	}
+	//	tx.Commit()
+	//	j.JsonSuccess(data)
+	//})
 	//缓存
 	r.GET("/cache", func(j *job.Job) {
 		if j.Input["data"] != "" {

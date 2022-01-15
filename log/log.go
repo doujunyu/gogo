@@ -22,28 +22,29 @@ type Log struct {
 
 // LogWriteStrings 将需要写入日志的信息组装
 type LogWriteStrings struct {
-	Url      string `Testing:"日志存放位置"`
-	FileName string `Testing:"文件按名"`
-	Prefix   string `Testing:"前缀"`
-	Content  string `Testing:"内容"`
+	Url      string    `Testing:"日志存放位置"`
+	FileName string    `Testing:"文件按名"`
+	Prefix   string    `Testing:"前缀"`
+	Content  string    `Testing:"内容"`
+	Ctime    time.Time `Testing:"时间"`
 }
 
-func init()  {
+func init() {
 	GlobalLogOnce.Do(func() {
 		dir, _ := os.Getwd()
 		logPath := os.Getenv("LOG_PATH")
-		GlobalLogData =  &Log{
+		GlobalLogData = &Log{
 			Path:    strings.Replace(dir, "\\", "/", -1) + logPath,
-			LogChan: make(chan *LogWriteStrings,1000),
+			LogChan: make(chan *LogWriteStrings, 1000),
 		}
 	})
 }
-
 
 // Error 报错文件(文件名,内容)(error)
 func Error(FileName string, content string) {
 	Write("", FileName+"_error", content)
 }
+
 // Write 写入日志 (前缀,文件名,内容)(error)
 func Write(prefix string, FileName string, content string) {
 	GlobalLogData.LogChan <- &LogWriteStrings{
@@ -51,31 +52,32 @@ func Write(prefix string, FileName string, content string) {
 		FileName: FileName,
 		Prefix:   prefix,
 		Content:  content,
+		Ctime:    time.Now(),
 	}
 }
 
 func LogChanOut() {
 	for {
 		data := <-GlobalLogData.LogChan
-		logWrite(data.Url, data.FileName, data.Prefix, data.Content) //日志内存
+		logWrite(data.Url, data.FileName, data.Prefix, data.Content, data.Ctime) //日志内存
 	}
 }
 
 // logWrite 写入日志 (日志路径，日志文件名，内容前缀，内容)
-func logWrite(url string, fileName string, prefix string, content string) {
+func logWrite(url string, fileName string, prefix string, content string, ctime time.Time) {
 	//日志内存
-	path := url + "/" + fileName + "/" + time.Now().Format("2006-01-02")
+	path := url + "/" + fileName + "/" + ctime.Format("2006-01-02")
 	_ = os.MkdirAll(path, os.ModePerm) //生成文件
 	//拼接文件绝对路径+文件名
 	fileNamePath := path + "/servicing.log"
 	fileInfo, err := os.Stat(fileNamePath)
 	if err == nil {
-		sizeG :=os.Getenv("LOG_FILE_SIZE_G")
+		sizeG := os.Getenv("LOG_FILE_SIZE_G")
 		sizeIntG, err := strconv.ParseInt(sizeG, 10, 64)
 		if err != nil {
 			sizeIntG = int64(1)
 		}
-		if fileInfo.Size() > (sizeIntG * int64(1024576 * 1024)) {
+		if fileInfo.Size() > (sizeIntG * int64(1024576*1024)) {
 			files, _ := ioutil.ReadDir(path)
 			_ = os.Rename(fileNamePath, path+"/_"+strconv.Itoa(len(files))+".log")
 		}
@@ -84,14 +86,9 @@ func logWrite(url string, fileName string, prefix string, content string) {
 	if err != nil {
 		return
 	}
-	defer func(filePath *os.File) {
-		err := filePath.Close()
-		if err != nil {
-
-		}
-	}(filePath)
+	defer filePath.Close()
 	//写入文件
 	logger := log.New(filePath, "["+prefix+"]:", log.Lmicroseconds)
-	logger.Printf(content)
+	logger.Printf("|" + ctime.Format("15:04:05") + "|" + content)
 	return
 }
