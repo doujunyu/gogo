@@ -19,7 +19,10 @@ func Open(sqlType string,databaseLine string) (*sql.DB,error) {
 }
 
 // DataToMap 处理数据
-func DataToMap(rows *sql.Rows) ([]map[string]interface{}, error) {
+func DataToMap(rows *sql.Rows,err error) ([]map[string]interface{}, error) {
+	if err != nil{
+		return nil,err
+	}
 	columns, _ := rows.Columns() //数据的字段
 	columnLength := len(columns)
 	cache := make([]interface{}, columnLength) //临时存储每行数据
