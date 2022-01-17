@@ -6,6 +6,7 @@ import (
 	"github.com/doujunyu/gogo/job"
 	"github.com/doujunyu/gogo/log"
 	"net/http"
+	"runtime/debug"
 	"time"
 )
 
@@ -122,7 +123,7 @@ func (c *Centre) createRequestMapDataRun() {
 	for key, val := range c.gatherRequest {
 		func(relativePath string, handlerFuncMapSlice map[string]*[]HandlerFunc) {
 			http.HandleFunc(relativePath, func(w http.ResponseWriter, r *http.Request) {
-				fmt.Println(relativePath, r.Method)
+
 				//logChan := c.LogChan
 				jobs := &job.Job{
 					File:  job.JobNewFile(), //初始化文件
@@ -146,8 +147,9 @@ func (c *Centre) createRequestMapDataRun() {
 				}
 				defer func() {
 					if err := recover(); err != nil {
+						logMessage := fmt.Sprintf("%v请求 路由:%v 参数%v \n 报错详情:%v \n %v",r.Method,relativePath,jobs.Input, err,string(debug.Stack()))
+						log.Write("内部错误", "error", logMessage)
 						jobs.JsonError(nil, "执行错误", 500)
-						log.Write("内部错误", "error", fmt.Sprintf("%v", err))
 						return
 					}
 				}()
