@@ -440,8 +440,11 @@ func PgTable(table string) *PgQuery {
 func (db *PgQuery) replacePlace(){
 	split := strings.Split(db.SqlQuery, "?")
 	db.SqlQuery = ""
+	lenSplit := len(split)
 	for i, s := range split {
-		if s != ""{
+		if i + 1 >= lenSplit{
+			db.SqlQuery += fmt.Sprintf("%v ", s)
+		}else{
 			db.SqlQuery += fmt.Sprintf("%v $%v ", s,i+1)
 		}
 	}
