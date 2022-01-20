@@ -35,12 +35,12 @@ func (db *PgQuery) ToSql() (string, []interface{}) {
 //查询固定方法
 
 func (db *PgQuery) Table(Table string) *PgQuery {
-	db.RecordTable = "`" + Table + "`"
+	db.RecordTable = Table
 	return db
 }
 func (db *PgQuery) Field(field ...string) *PgQuery {
 	for key, val := range field {
-		field[key] = "`" + val + "`"
+		field[key] = val
 	}
 	db.RecordField = field
 	return db
@@ -78,7 +78,7 @@ func (db *PgQuery) WhereIn(field string, condition ...interface{}) *PgQuery {
 	if db.WhereSqlQuery != "" {
 		db.WhereSqlQuery += "and "
 	}
-	db.WhereSqlQuery += "`" + field + "` in ("
+	db.WhereSqlQuery += field + " in ("
 	for _, _ = range condition {
 		db.WhereSqlQuery += "?,"
 	}
@@ -91,7 +91,7 @@ func (db *PgQuery) WhereNotIn(field string, condition ...interface{}) *PgQuery {
 	if db.WhereSqlQuery != "" {
 		db.WhereSqlQuery += "and "
 	}
-	db.WhereSqlQuery += "`" + field + "` not in ("
+	db.WhereSqlQuery += field + " not in ("
 	for _, _ = range condition {
 		db.WhereSqlQuery += "?,"
 	}
@@ -131,7 +131,7 @@ func (db *PgQuery) WhereInRaw(field string, childQuery PgChildQuery, val ...inte
 	if db.WhereSqlQuery != "" {
 		db.WhereSqlQuery += "and "
 	}
-	db.WhereSqlQuery += "`" + field + "` in ("
+	db.WhereSqlQuery += field + " in ("
 	check := &PgQuery{}
 	childQuery(check, val...)
 	checkSql,args := check.ToSql()
@@ -144,7 +144,7 @@ func (db *PgQuery) WhereNotInRaw(field string, childQuery PgChildQuery, val ...i
 	if db.WhereSqlQuery != "" {
 		db.WhereSqlQuery += "and "
 	}
-	db.WhereSqlQuery += "`" + field + "`not in ("
+	db.WhereSqlQuery += field + "not in ("
 	check := &PgQuery{}
 	childQuery(check, val...)
 	checkSql,args := check.ToSql()
@@ -157,7 +157,7 @@ func (db *PgQuery) WhereId(id string) *PgQuery {
 	if db.WhereSqlQuery != "" {
 		db.WhereSqlQuery += "and "
 	}
-	db.WhereSqlQuery = "`id` = ? "
+	db.WhereSqlQuery = "id = ? "
 	db.Args = append(db.Args, id)
 	return db
 }
@@ -265,7 +265,7 @@ func (db *PgQuery) InsertAllByStruct(datas []interface{}) (string,[]interface{})
 
 func (db *PgQuery) OperateInsertTable() {
 	if db.RecordTable != "" {
-		db.SqlQuery += "INSERT INTO `" + db.RecordTable + "` "
+		db.SqlQuery += "INSERT INTO " + db.RecordTable + " "
 	}
 }
 func (db *PgQuery) OperateInsertDataByMap(data *map[string]interface{}) {
@@ -274,7 +274,7 @@ func (db *PgQuery) OperateInsertDataByMap(data *map[string]interface{}) {
 		db.SqlQuery += "("
 		values := ""
 		for key, val := range *data {
-			db.SqlQuery += "`" + key + "`,"
+			db.SqlQuery +=  key + ","
 			values += "?,"
 			db.Args = append(db.Args, val)
 		}
@@ -310,7 +310,7 @@ func (db *PgQuery) OperateInsertDataByStruct(data interface{}) {
 		for i := 0; i < dataValue.NumField(); i++ {
 			field := dataType.Field(i).Tag.Get("json")
 			structValue := dataValue.Field(i).Interface()
-			db.SqlQuery += "`" + field + "`,"
+			db.SqlQuery += field + ","
 			values += "?,"
 			db.Args = append(db.Args, structValue)
 		}
@@ -361,11 +361,11 @@ func (db *PgQuery) UpdateByStruct(data interface{}) (string,[]interface{}) {
 func (db *PgQuery) OperateUpdateByMapData(data *map[string]interface{}) {
 	numData := len(*data)
 	if numData > 0 {
-		db.SqlQuery += "UPDATE `" + db.RecordTable + "` "
+		db.SqlQuery += "UPDATE " + db.RecordTable + " "
 		db.SqlQuery += "SET "
 		var args []interface{}
 		for key, val := range *data {
-			db.SqlQuery += " `" + key + "` = ? ,"
+			db.SqlQuery += " " + key + " = ? ,"
 			args = append(args, val)
 		}
 		db.Args = append(args, db.Args...)
@@ -384,13 +384,13 @@ func (db *PgQuery) OperateUpdateByStructData(data interface{}) {
 	}
 	numField := dataValue.NumField()
 	if numField > 0 {
-		db.SqlQuery += "UPDATE `" + db.RecordTable + "` "
+		db.SqlQuery += "UPDATE " + db.RecordTable + " "
 		db.SqlQuery += "SET "
 		var args []interface{}
 		for i := 0; i < dataValue.NumField(); i++ {
 			field := dataType.Field(i).Tag.Get("json")
 			structValue := dataValue.Field(i).Interface()
-			db.SqlQuery += " `" + field + "` = ? ,"
+			db.SqlQuery += " " + field + " = ? ,"
 			args = append(args, structValue)
 		}
 		db.SqlQuery = db.SqlQuery[:len(db.SqlQuery)-1]
@@ -415,7 +415,7 @@ func (db *PgQuery) Delete() (string,[]interface{}) {
 
 // OperateDeleteData 整理删除查询的sql和参数
 func (db *PgQuery) OperateDeleteData() {
-	db.SqlQuery += "DELETE FROM  `" + db.RecordTable + "` "
+	db.SqlQuery += "DELETE FROM  " + db.RecordTable + " "
 	if db.WhereSqlQuery != "" {
 		db.SqlQuery += "where "
 	}
