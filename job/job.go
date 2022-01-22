@@ -11,7 +11,7 @@ type Job struct {
 	File      *Files                 `Testing:"文件"`
 	Input     map[string]string      `Testing:"接收的参数"`
 	GroupData map[string]interface{} `Testing:"跨方法的数据"`
-	Rests     *map[string]interface{}           `Testing:"其他"`
+	IsFlow    bool                   `Testing:"判断是否继续向下执行:true=继续执行,false=停止"`
 }
 
 // +----------------------------------------------------------------------

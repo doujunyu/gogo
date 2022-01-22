@@ -127,6 +127,7 @@ func (c *Centre) createRequestMapDataRun() {
 				//logChan := c.LogChan
 				jobs := &job.Job{
 					File:  job.JobNewFile(), //初始化文件
+					IsFlow: true,
 				}
 				//接参数
 				r.FormValue("")
@@ -155,11 +156,15 @@ func (c *Centre) createRequestMapDataRun() {
 				}()
 				//全局中间件
 				for _, MiddlewareHandlerFunc := range c.Middleware {
-					MiddlewareHandlerFunc(jobs)
+					if jobs.IsFlow == true {
+						MiddlewareHandlerFunc(jobs)
+					}
 				}
 				//局部中间件
 				for _, HandlerFuncVal := range *handlerFuncMapSlice[r.Method] {
-					HandlerFuncVal(jobs)
+					if jobs.IsFlow == true {
+						HandlerFuncVal(jobs)
+					}
 				}
 			})
 		}(key, val)
