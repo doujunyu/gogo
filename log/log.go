@@ -59,7 +59,9 @@ func Write(prefix string, FileName string, content string) {
 func LogChanOut() {
 	for {
 		data := <-GlobalLogData.LogChan
-		logWrite(data.Url, data.FileName, data.Prefix, data.Content, data.Ctime) //日志内存
+		if data != nil{
+			logWrite(data.Url, data.FileName, data.Prefix, data.Content, data.Ctime) //日志内存
+		}
 	}
 }
 
