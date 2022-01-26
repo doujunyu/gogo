@@ -21,7 +21,6 @@ func (j *Job) JsonSuccess(all ...interface{}) {
 		Msg:  "操作成功",
 		Code: 0,
 	}
-	j.IsFlow = false
 	_, _ = j.W.Write(mes.Json(all))
 }
 
@@ -32,7 +31,6 @@ func (j *Job) JsonError(all ...interface{}) {
 		Msg:  "操作失败",
 		Code: 1,
 	}
-	j.IsFlow = false
 	_, _ = j.W.Write(mes.Json(all))
 }
 

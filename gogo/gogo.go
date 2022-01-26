@@ -2,8 +2,8 @@ package gogo
 
 import (
 	"github.com/doujunyu/gogo/cache"
+	"github.com/doujunyu/gogo/gogo_log"
 	"github.com/doujunyu/gogo/job"
-	"github.com/doujunyu/gogo/log"
 	_ "github.com/joho/godotenv/autoload"
 	"net/http"
 	"time"
@@ -53,7 +53,7 @@ func ReadyGo() *Centre {
 func (c *Centre) Run(addr ...interface{}) {
 	c.createRequestMapDataRun()          //生成路由接口
 	go c.setClose()                      //软关闭服务
-	go log.LogChanOut()                  //日志管道处理
+	go gogo_log.LogChanOut()             //日志管道处理
 	go cache.ChanLongTime()              //缓存清除过期数据
 	c.Server.Addr = resolveAddress(addr) //确认端口
 	_ = c.Server.ListenAndServe()        //启动

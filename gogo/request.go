@@ -3,8 +3,8 @@ package gogo
 import (
 	"context"
 	"fmt"
+	"github.com/doujunyu/gogo/gogo_log"
 	"github.com/doujunyu/gogo/job"
-	"github.com/doujunyu/gogo/log"
 	"net/http"
 	"runtime/debug"
 	"time"
@@ -74,13 +74,13 @@ func (c *Centre) setClose() {
 	<-c.ServerClose
 	ServerStatus = ServerStatusSystemForbid
 	fmt.Println("http服务器已经停止外网访问!")
-	close(log.GlobalLogData.LogChan)
+	close(gogo_log.GlobalLogData.LogChan)
 	fmt.Println("日志已停止写入!")
 	fmt.Println("正在清理管道中日志信息...")
 	logChanLenI := 0
 	for {
 		logChanLenI++
-		logChanLen := len(log.GlobalLogData.LogChan)
+		logChanLen := len(gogo_log.GlobalLogData.LogChan)
 		if logChanLen == 0 {
 			break
 		}
@@ -128,7 +128,6 @@ func (c *Centre) createRequestMapDataRun() {
 				jobs := &job.Job{
 					File:  job.JobNewFile(), //初始化文件
 					IsFlow: true,
-					GroupData: make(map[string]interface{}),
 				}
 				//接参数
 				r.FormValue("")
@@ -150,7 +149,7 @@ func (c *Centre) createRequestMapDataRun() {
 				defer func() {
 					if err := recover(); err != nil {
 						logMessage := fmt.Sprintf("%v请求 路由:%v 参数%v \n 报错详情:%v \n %v",r.Method,relativePath,jobs.Input, err,string(debug.Stack()))
-						log.Write("内部错误", "error", logMessage)
+						gogo_log.Write("内部错误", "error", logMessage)
 						jobs.JsonError(nil, "执行错误", 500)
 						return
 					}

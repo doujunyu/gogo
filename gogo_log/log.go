@@ -1,4 +1,4 @@
-package log
+package gogo_log
 
 import (
 	_ "github.com/joho/godotenv/autoload"
@@ -71,7 +71,7 @@ func logWrite(url string, fileName string, prefix string, content string, ctime 
 	path := url + "/" + fileName + "/" + ctime.Format("2006-01-02")
 	_ = os.MkdirAll(path, os.ModePerm) //生成文件
 	//拼接文件绝对路径+文件名
-	fileNamePath := path + "/servicing.log"
+	fileNamePath := path + "/servicing.gogo_log"
 	fileInfo, err := os.Stat(fileNamePath)
 	if err == nil {
 		sizeG := os.Getenv("LOG_FILE_SIZE_G")
@@ -81,7 +81,7 @@ func logWrite(url string, fileName string, prefix string, content string, ctime 
 		}
 		if fileInfo.Size() > (sizeIntG * int64(1024576*1024)) {
 			files, _ := ioutil.ReadDir(path)
-			_ = os.Rename(fileNamePath, path+"/_"+strconv.Itoa(len(files))+".log")
+			_ = os.Rename(fileNamePath, path+"/_"+strconv.Itoa(len(files))+".gogo_log")
 		}
 	}
 	filePath, err := os.OpenFile(fileNamePath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, os.ModePerm)

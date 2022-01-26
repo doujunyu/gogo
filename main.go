@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"github.com/doujunyu/gogo/cache"
 	"github.com/doujunyu/gogo/gogo"
+	"github.com/doujunyu/gogo/gogo_log"
 	"github.com/doujunyu/gogo/job"
-	"github.com/doujunyu/gogo/log"
 	"github.com/doujunyu/gogo/sql_aid"
 
 	//_ "github.com/go-sql-driver/mysql"//mysql数据库
@@ -46,7 +46,7 @@ func main() {
 
 	r := gogo.ReadyGo()
 	r.GET("/demosql", func(j *job.Job) {
-		log.Write("前缀","gogo","正常信息")
+		gogo_log.Write("前缀","gogo","正常信息")
 		data := make(map[string]interface{})
 		data["user_id"] = 1
 		data["cat_id"] = 1
@@ -71,28 +71,28 @@ func main() {
 	//简单的例子
 	r.GET("/demo", func(j *job.Job) {
 		input := j.Input
-		log.Error("demo","记录一条错误信息")
-		//log.Write("前缀","gogo","正常信息")
+		gogo_log.Error("demo","记录一条错误信息")
+		//gogo_log.Write("前缀","gogo","正常信息")
 		j.JsonSuccess(input,"这里是get提交")
 	})
 	r.POST("/demo", func(j *job.Job) {
 		//input := j.Input
-		log.Error("demo","记录一条错误信息")
-		log.Write("前缀","gogo","正常信息")
+		gogo_log.Error("demo","记录一条错误信息")
+		gogo_log.Write("前缀","gogo","正常信息")
 		j.JsonSuccess(nil,"这里是post提交")
 	})
 	//之前中间件
 	r.GET("/beforeGroup",group, func(j *job.Job) {
 		input := j.Input
-		log.Error("demo","记录一条错误信息")
-		log.Write("前缀","gogo","正常信息")
+		gogo_log.Error("demo","记录一条错误信息")
+		gogo_log.Write("前缀","gogo","正常信息")
 		j.JsonSuccess(input)
 	})
 	//之后中间件
 	r.GET("/laterGroup", func(j *job.Job) {
 		input := j.Input
-		log.Error("demo","记录一条错误信息")
-		log.Write("前缀","gogo","正常信息")
+		gogo_log.Error("demo","记录一条错误信息")
+		gogo_log.Write("前缀","gogo","正常信息")
 		j.JsonSuccess(input)
 	},group)
 	//数据库查询

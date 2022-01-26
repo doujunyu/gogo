@@ -146,6 +146,7 @@ func Exists(name string) bool {
 // ChanLongTime 清理过期的缓存
 func ChanLongTime() {
 	for {
+		time.Sleep(time.Second)
 		for name, value := range GlobalCacheData.Data {
 			time.Sleep(time.Second)
 			if value.Time < time.Now().Unix() {
