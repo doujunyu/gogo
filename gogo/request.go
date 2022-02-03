@@ -128,6 +128,7 @@ func (c *Centre) createRequestMapDataRun() {
 				jobs := &job.Job{
 					File:  job.JobNewFile(), //初始化文件
 					IsFlow: true,
+					GroupData: make(map[string]interface{}),//初始化跨方法的数据
 				}
 				//接参数
 				r.FormValue("")
