@@ -210,9 +210,10 @@ func (db *PgQuery) OperateFindPageSize() {
 			db.RecordSize = 10
 		}
 		var limita int = (db.RecordPage - 1) * db.RecordSize
-		db.SqlQuery += "limit ?,? "
-		db.Args = append(db.Args, limita)
+		db.SqlQuery += "limit ? OFFSET ? "
 		db.Args = append(db.Args, db.RecordSize)
+		db.Args = append(db.Args, limita)
+
 	}
 
 }
