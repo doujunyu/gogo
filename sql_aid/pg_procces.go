@@ -61,7 +61,7 @@ func (db *PgQuery) Where(field string, val interface{}) *PgQuery {
 		db.WhereSqlQuery += "and "
 	}
 	db.WhereSqlQuery += field
-	if val == nil{
+	if val != nil{
 		db.Args = append(db.Args, val)
 	}
 	return db
@@ -73,7 +73,7 @@ func (db *PgQuery) WhereOr(field string, val interface{}) *PgQuery {
 		db.WhereSqlQuery += "OR "
 	}
 	db.WhereSqlQuery += "(" + field + ") "
-	if val == nil{
+	if val != nil{
 		db.Args = append(db.Args, val)
 	}
 	return db
