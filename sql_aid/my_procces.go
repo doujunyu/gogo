@@ -59,7 +59,7 @@ func (db *MyQuery) Where(field string, val interface{}) *MyQuery {
 	if db.WhereSqlQuery != "" {
 		db.WhereSqlQuery += "and "
 	}
-	db.WhereSqlQuery += field
+	db.WhereSqlQuery += field + " "
 	if val != nil{
 		db.Args = append(db.Args, val)
 	}

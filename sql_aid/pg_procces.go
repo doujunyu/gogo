@@ -60,7 +60,7 @@ func (db *PgQuery) Where(field string, val interface{}) *PgQuery {
 	if db.WhereSqlQuery != "" {
 		db.WhereSqlQuery += "and "
 	}
-	db.WhereSqlQuery += field
+	db.WhereSqlQuery += field + " "
 	if val != nil{
 		db.Args = append(db.Args, val)
 	}
