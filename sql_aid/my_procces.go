@@ -156,7 +156,7 @@ func (db *MyQuery) WhereNotInRaw(field string, childQuery MyChildQuery, val ...i
 	db.WhereSqlQuery += ") "
 	return db
 }
-func (db *MyQuery) WhereId(id string) *MyQuery {
+func (db *MyQuery) WhereId(id interface{}) *MyQuery {
 	if db.WhereSqlQuery != "" {
 		db.WhereSqlQuery += "and "
 	}

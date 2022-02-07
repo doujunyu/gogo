@@ -159,7 +159,7 @@ func (db *PgQuery) WhereNotInRaw(field string, childQuery PgChildQuery, val ...i
 	db.WhereSqlQuery += ") "
 	return db
 }
-func (db *PgQuery) WhereId(id string) *PgQuery {
+func (db *PgQuery) WhereId(id interface{}) *PgQuery {
 	if db.WhereSqlQuery != "" {
 		db.WhereSqlQuery += "and "
 	}
