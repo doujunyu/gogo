@@ -61,7 +61,9 @@ func (db *PgQuery) Where(field string, val interface{}) *PgQuery {
 		db.WhereSqlQuery += "and "
 	}
 	db.WhereSqlQuery += field
-	db.Args = append(db.Args, val)
+	if val == nil{
+		db.Args = append(db.Args, val)
+	}
 	return db
 }
 func (db *PgQuery) WhereOr(field string, val interface{}) *PgQuery {
@@ -71,7 +73,9 @@ func (db *PgQuery) WhereOr(field string, val interface{}) *PgQuery {
 		db.WhereSqlQuery += "OR "
 	}
 	db.WhereSqlQuery += "(" + field + ") "
-	db.Args = append(db.Args, val)
+	if val == nil{
+		db.Args = append(db.Args, val)
+	}
 	return db
 }
 func (db *PgQuery) WhereIn(field string, condition ...interface{}) *PgQuery {
@@ -85,6 +89,7 @@ func (db *PgQuery) WhereIn(field string, condition ...interface{}) *PgQuery {
 	db.WhereSqlQuery = db.WhereSqlQuery[:len(db.WhereSqlQuery)-1]
 	db.WhereSqlQuery += ") "
 	db.Args = append(db.Args, condition...)
+
 	return db
 }
 func (db *PgQuery) WhereNotIn(field string, condition ...interface{}) *PgQuery {
@@ -98,6 +103,7 @@ func (db *PgQuery) WhereNotIn(field string, condition ...interface{}) *PgQuery {
 	db.WhereSqlQuery = db.WhereSqlQuery[:len(db.WhereSqlQuery)-1]
 	db.WhereSqlQuery += ") "
 	db.Args = append(db.Args, condition...)
+
 	return db
 }
 func (db *PgQuery) WhereRaw(childQuery PgChildQuery, val ...interface{}) *PgQuery {

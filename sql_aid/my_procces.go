@@ -60,7 +60,9 @@ func (db *MyQuery) Where(field string, val interface{}) *MyQuery {
 		db.WhereSqlQuery += "and "
 	}
 	db.WhereSqlQuery += field
-	db.Args = append(db.Args, val)
+	if val == nil{
+		db.Args = append(db.Args, val)
+	}
 	return db
 }
 func (db *MyQuery) WhereOr(field string, val interface{}) *MyQuery {
@@ -70,7 +72,9 @@ func (db *MyQuery) WhereOr(field string, val interface{}) *MyQuery {
 		db.WhereSqlQuery += "OR "
 	}
 	db.WhereSqlQuery += "(" + field + ") "
-	db.Args = append(db.Args, val)
+	if val == nil{
+		db.Args = append(db.Args, val)
+	}
 	return db
 }
 func (db *MyQuery) WhereIn(field string, condition ...interface{}) *MyQuery {
