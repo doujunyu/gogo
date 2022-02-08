@@ -46,7 +46,7 @@ func (j *Job) InputFile(FileName string, FilePath string, Check map[string]inter
 		return "", errors.New("文件过大:上传的文件超过设置的" + Mb + "MB")
 	}
 	//验证文件格式
-	if Check["suffix"] != nil && strings.Index(Check["suffix"].(string), handler.Filename) >= 0 {
+	if Check["suffix"] != nil && strings.Index(Check["suffix"].(string), path.Ext(handler.Filename)) == -1 {
 		return "", errors.New("文件格式不正确")
 	}
 	//更新文件名
