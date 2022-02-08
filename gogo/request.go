@@ -144,7 +144,7 @@ func (c *Centre) createRequestMapDataRun() {
 				}
 
 				if handlerFuncMapSlice[r.Method] == nil {
-					jobs.JsonError(nil, "请求方式不存在", 1)
+					jobs.JsonError(nil, r.Method +"请求方式不存在", 1)
 					return
 				}
 				defer func() {
