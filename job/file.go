@@ -19,7 +19,7 @@ type CheckConfig struct {
 	Suffix string
 }
 
-// JobNewFile 初始化日志
+// JobNewFile 初始化文件
 func JobNewFile() *Files {
 	root, _ := utility.UrlRootPath()
 	filesPath := os.Getenv("FILE_PATH")
@@ -56,6 +56,9 @@ func (j *Job) InputFile(FileName string, FilePath string, Check map[string]inter
 		FileName = Check["name"].(string) + path.Ext(handler.Filename)
 	}
 	FilePathName := j.File.Path + "/" + FilePath
-	return utility.FileNew(FilePathName+"/"+FileName, file)
-
+	_,err = utility.FileNew(FilePathName+"/"+FileName, file)
+	if err != nil {
+		return "",err
+	}
+	return os.Getenv("FILE_PATH") + "/" + FilePath+"/"+FileName ,nil
 }

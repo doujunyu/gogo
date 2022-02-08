@@ -12,7 +12,6 @@ import (
 // FileNew 文件地址成文件 (新文件路径,新文件名,文件地址)
 func FileNew(NewFileName string, file multipart.File) (string, error) {
 	//创建一个文件
-
 	NewPath(NewFileName)
 	ThisFile, err := os.OpenFile(NewFileName, os.O_CREATE|os.O_WRONLY, 0766)
 	if err != nil {

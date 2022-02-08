@@ -20,26 +20,26 @@ var MySqlLine *sql.DB
 var PGSqlLine *sql.DB
 func main() {
 	//链接数pgsql
-	pgsql,err := sql_aid.Open("postgres",os.Getenv("PGSQL_URL"))
-	fmt.Println(os.Getenv("PGSQL_URL"))
-	if err != nil {
-		fmt.Println("数据路链接错误",err)
-		return
-	}
-	PGSqlLine = pgsql
-	PGSqlLine.SetConnMaxLifetime(time.Minute * 3)
-	PGSqlLine.SetMaxOpenConns(10)
-	PGSqlLine.SetMaxIdleConns(10)
-	//链接mysql
-	mysql, err := sql.Open("mysql", os.Getenv("MYSQL_URL"))
-	if err != nil {
-		fmt.Println("数据路链接错误")
-		return
-	}
-	MySqlLine = mysql
-	MySqlLine.SetConnMaxLifetime(time.Minute * 3)
-	MySqlLine.SetMaxOpenConns(10)
-	MySqlLine.SetMaxIdleConns(10)
+	//pgsql,err := sql_aid.Open("postgres",os.Getenv("PGSQL_URL"))
+	//fmt.Println(os.Getenv("PGSQL_URL"))
+	//if err != nil {
+	//	fmt.Println("数据路链接错误",err)
+	//	return
+	//}
+	//PGSqlLine = pgsql
+	//PGSqlLine.SetConnMaxLifetime(time.Minute * 3)
+	//PGSqlLine.SetMaxOpenConns(10)
+	//PGSqlLine.SetMaxIdleConns(10)
+	////链接mysql
+	//mysql, err := sql.Open("mysql", os.Getenv("MYSQL_URL"))
+	//if err != nil {
+	//	fmt.Println("数据路链接错误")
+	//	return
+	//}
+	//MySqlLine = mysql
+	//MySqlLine.SetConnMaxLifetime(time.Minute * 3)
+	//MySqlLine.SetMaxOpenConns(10)
+	//MySqlLine.SetMaxIdleConns(10)
 
 
 
@@ -168,14 +168,15 @@ func main() {
 		j.JsonSuccess(nil,"正在关机")
 	})
 	//文件上传
-	r.GET("/file", func(j *job.Job) {
+	r.POST("/file", func(j *job.Job) {
 		files := make(map[string]interface{})
 		files["size"] = int64(1024 * 1024 * 5)
 		files["name"] = "sss" + time.Now().Format("2006-01-02-15-04-05")
 		files["suffix"] = "png,jpg"
 		file, err := j.InputFile("file", "demo", files)
 		if err != nil {
-			j.JsonError(nil, err)
+			j.JsonError(nil, err.Error())
+			return
 		}
 		j.JsonSuccess(file, "aaaaa")
 		fmt.Println(file, err)
