@@ -126,14 +126,17 @@ func (db *PgQuery) WhereRaw(childQuery PgChildQuery, val ...interface{}) *PgQuer
 	return db
 }
 func (db *PgQuery) WhereOrRaw(childQuery PgChildQuery, val ...interface{}) *PgQuery {
-	if db.WhereSqlQuery != "" {
-		db.WhereSqlQuery += "and ("
-	}else{
-		db.WhereSqlQuery += "( "
-	}
 	check := &PgQuery{}
 	childQuery(check, val...)
 	checkSql,args := check.jointSql()
+	if checkSql == "" {
+		return db
+	}
+	if db.WhereSqlQuery != "" {
+		db.WhereSqlQuery += "OR ("
+	}else{
+		db.WhereSqlQuery += "( "
+	}
 	db.WhereSqlQuery += checkSql
 	db.Args = append(db.Args, args...)
 	db.WhereSqlQuery += ") "

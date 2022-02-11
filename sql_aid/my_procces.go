@@ -27,10 +27,13 @@ type MyChildQuery func(*MyQuery, ...interface{})
 //查询数据方法
 
 func (db *MyQuery) ToSql() (string, []interface{}) {
+	db.jointSql()
+	return db.SqlQuery, db.Args
+}
+func (db *MyQuery) jointSql() (string, []interface{}) {
 	db.OperateFindToSql()
 	return db.SqlQuery, db.Args
 }
-
 //查询固定方法
 
 func (db *MyQuery) Table(Table string) *MyQuery {
@@ -104,27 +107,34 @@ func (db *MyQuery) WhereNotIn(field string, condition ...interface{}) *MyQuery {
 	return db
 }
 func (db *MyQuery) WhereRaw(childQuery MyChildQuery, val ...interface{}) *MyQuery {
+	check := &MyQuery{}
+	childQuery(check, val...)
+	checkSql,args := check.jointSql()
+	if checkSql == "" {
+		return db
+	}
 	if db.WhereSqlQuery != "" {
 		db.WhereSqlQuery += "and "
 	}
 	db.WhereSqlQuery += "("
-	check := &MyQuery{}
-	childQuery(check, val...)
-	checkSql,args := check.ToSql()
+
 	db.WhereSqlQuery += checkSql
 	db.Args = append(db.Args, args...)
 	db.WhereSqlQuery += ") "
 	return db
 }
 func (db *MyQuery) WhereOrRaw(childQuery MyChildQuery, val ...interface{}) *MyQuery {
+	check := &MyQuery{}
+	childQuery(check, val...)
+	checkSql,args := check.jointSql()
+	if checkSql == "" {
+		return db
+	}
 	if db.WhereSqlQuery != "" {
 		db.WhereSqlQuery += "and ("
 	}else{
 		db.WhereSqlQuery += "( "
 	}
-	check := &MyQuery{}
-	childQuery(check, val...)
-	checkSql,args := check.ToSql()
 	db.WhereSqlQuery += checkSql
 	db.Args = append(db.Args, args...)
 	db.WhereSqlQuery += ") "
@@ -137,7 +147,7 @@ func (db *MyQuery) WhereInRaw(field string, childQuery MyChildQuery, val ...inte
 	db.WhereSqlQuery += "`" + field + "` in ("
 	check := &MyQuery{}
 	childQuery(check, val...)
-	checkSql,args := check.ToSql()
+	checkSql,args := check.jointSql()
 	db.WhereSqlQuery += checkSql
 	db.Args = append(db.Args, args...)
 	db.WhereSqlQuery += ") "
@@ -150,7 +160,7 @@ func (db *MyQuery) WhereNotInRaw(field string, childQuery MyChildQuery, val ...i
 	db.WhereSqlQuery += "`" + field + "`not in ("
 	check := &MyQuery{}
 	childQuery(check, val...)
-	checkSql,args := check.ToSql()
+	checkSql,args := check.jointSql()
 	db.WhereSqlQuery += checkSql
 	db.Args = append(db.Args, args...)
 	db.WhereSqlQuery += ") "

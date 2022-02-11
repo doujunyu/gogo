@@ -99,7 +99,7 @@ func main() {
 	r.GET("/SqlFind", func(j *job.Job) {
 		goodsSql,arge := sql_aid.PgTable("table").Where("shop_id = ?",1).WhereOrRaw(func(query *sql_aid.PgQuery, i ...interface{}) {
 			if i[0].(int) != 0{
-				query.Where("up_down = ?",i[0].(int))
+				//query.Where("up_down = ?",i[0].(int))
 			}
 		},1).PageSize(1,10).ToSql()
 		fmt.Println(goodsSql,arge)
