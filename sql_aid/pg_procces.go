@@ -110,13 +110,16 @@ func (db *PgQuery) WhereNotIn(field string, condition ...interface{}) *PgQuery {
 	return db
 }
 func (db *PgQuery) WhereRaw(childQuery PgChildQuery, val ...interface{}) *PgQuery {
+	check := &PgQuery{}
+	childQuery(check, val...)
+	checkSql,args := check.jointSql()
+	if checkSql == "" {
+		return db
+	}
 	if db.WhereSqlQuery != "" {
 		db.WhereSqlQuery += "and "
 	}
 	db.WhereSqlQuery += "("
-	check := &PgQuery{}
-	childQuery(check, val...)
-	checkSql,args := check.jointSql()
 	db.WhereSqlQuery += checkSql
 	db.Args = append(db.Args, args...)
 	db.WhereSqlQuery += ") "
