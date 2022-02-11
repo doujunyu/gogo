@@ -8,7 +8,6 @@ import (
 	"github.com/doujunyu/gogo/gogo_log"
 	"github.com/doujunyu/gogo/job"
 	"github.com/doujunyu/gogo/sql_aid"
-
 	//_ "github.com/go-sql-driver/mysql"//mysql数据库
 	//_ "github.com/lib/pq" //pg数据库
 	"io/ioutil"
@@ -101,7 +100,7 @@ func main() {
 			if i[0].(int) != 0{
 				//query.Where("up_down = ?",i[0].(int))
 			}
-		},1).PageSize("1","10").ToSql()
+		},1).PageSize("0","10").ToSql()
 		fmt.Println(goodsSql,arge)
 		j.JsonSuccess()
 		return

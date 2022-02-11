@@ -221,16 +221,21 @@ func (db *PgQuery) OperateFindOrderBy() {
 }
 
 func (db *PgQuery) OperateFindPageSize() {
-	page,_ := strconv.Atoi(db.RecordPage)
-	if page != 0 {
-		size,_ := strconv.Atoi(db.RecordSize)
-		if size == 0 {
-			size = 10
-		}
-		db.SqlQuery += "limit ? OFFSET ? "
-		db.Args = append(db.Args, size)
-		db.Args = append(db.Args, (page - 1) * size)
+	page,err := strconv.Atoi(db.RecordPage)
+	if err != nil{
+		return
 	}
+	if page <= 0 {
+		page = 1
+	}
+	size,_ := strconv.Atoi(db.RecordSize)
+	if size == 0 {
+		size = 10
+	}
+	db.SqlQuery += "limit ? OFFSET ? "
+	db.Args = append(db.Args, size)
+	db.Args = append(db.Args, (page - 1) * size)
+
 
 }
 

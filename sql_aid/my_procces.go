@@ -219,16 +219,21 @@ func (db *MyQuery) OperateFindOrderBy() {
 }
 
 func (db *MyQuery) OperateFindPageSize() {
-	page,_ := strconv.Atoi(db.RecordPage)
-	if page != 0 {
-		size,_ := strconv.Atoi(db.RecordSize)
-		if size == 0 {
-			size = 10
-		}
-		db.SqlQuery += "limit ?,? "
-		db.Args = append(db.Args, (page - 1) * size)
-		db.Args = append(db.Args, size)
+	page,err := strconv.Atoi(db.RecordPage)
+	if err != nil{
+		return
 	}
+	if page <= 0 {
+		page = 1
+	}
+	size,_ := strconv.Atoi(db.RecordSize)
+	if size == 0 {
+		size = 10
+	}
+	db.SqlQuery += "limit ?,? "
+	db.Args = append(db.Args, (page - 1) * size)
+	db.Args = append(db.Args, size)
+
 }
 
 // +----------------------------------------------------------------------
