@@ -27,11 +27,14 @@ type PgChildQuery func(*PgQuery, ...interface{})
 //查询数据方法
 
 func (db *PgQuery) ToSql() (string, []interface{}) {
-	db.OperateFindToSql()
+	db.jointSql()
 	db.replacePlace()
 	return db.SqlQuery, db.Args
 }
-
+func (db *PgQuery) jointSql() (string, []interface{}) {
+	db.OperateFindToSql()
+	return db.SqlQuery, db.Args
+}
 //查询固定方法
 
 func (db *PgQuery) Table(Table string) *PgQuery {
@@ -113,7 +116,7 @@ func (db *PgQuery) WhereRaw(childQuery PgChildQuery, val ...interface{}) *PgQuer
 	db.WhereSqlQuery += "("
 	check := &PgQuery{}
 	childQuery(check, val...)
-	checkSql,args := check.ToSql()
+	checkSql,args := check.jointSql()
 	db.WhereSqlQuery += checkSql
 	db.Args = append(db.Args, args...)
 	db.WhereSqlQuery += ") "
@@ -127,7 +130,7 @@ func (db *PgQuery) WhereOrRaw(childQuery PgChildQuery, val ...interface{}) *PgQu
 	}
 	check := &PgQuery{}
 	childQuery(check, val...)
-	checkSql,args := check.ToSql()
+	checkSql,args := check.jointSql()
 	db.WhereSqlQuery += checkSql
 	db.Args = append(db.Args, args...)
 	db.WhereSqlQuery += ") "
@@ -140,7 +143,7 @@ func (db *PgQuery) WhereInRaw(field string, childQuery PgChildQuery, val ...inte
 	db.WhereSqlQuery += field + " in ("
 	check := &PgQuery{}
 	childQuery(check, val...)
-	checkSql,args := check.ToSql()
+	checkSql,args := check.jointSql()
 	db.WhereSqlQuery += checkSql
 	db.Args = append(db.Args, args...)
 	db.WhereSqlQuery += ") "
@@ -153,7 +156,7 @@ func (db *PgQuery) WhereNotInRaw(field string, childQuery PgChildQuery, val ...i
 	db.WhereSqlQuery += field + "not in ("
 	check := &PgQuery{}
 	childQuery(check, val...)
-	checkSql,args := check.ToSql()
+	checkSql,args := check.jointSql()
 	db.WhereSqlQuery += checkSql
 	db.Args = append(db.Args, args...)
 	db.WhereSqlQuery += ") "

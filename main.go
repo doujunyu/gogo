@@ -96,7 +96,15 @@ func main() {
 		j.JsonSuccess(input)
 	},group)
 	//数据库查询
-	//r.GET("/SqlFind", func(j *job.Job) {
+	r.GET("/SqlFind", func(j *job.Job) {
+		goodsSql,arge := sql_aid.PgTable("table").Where("shop_id = ?",1).WhereOrRaw(func(query *sql_aid.PgQuery, i ...interface{}) {
+			if i[0].(int) != 0{
+				query.Where("up_down = ?",i[0].(int))
+			}
+		},1).PageSize(1,10).ToSql()
+		fmt.Println(goodsSql,arge)
+		j.JsonSuccess()
+		return
 	//	set := sql.Db("THIS_TABLE")
 	//	set.Field("id", "nickname")
 	//	set.WhereId("3")
@@ -142,7 +150,7 @@ func main() {
 	//	}
 	//	tx.Commit()
 	//	j.JsonSuccess(data)
-	//})
+	})
 	//缓存
 	r.GET("/cache", func(j *job.Job) {
 		if j.Input["data"] != "" {
