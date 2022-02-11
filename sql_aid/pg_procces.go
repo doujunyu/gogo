@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/doujunyu/gogo/utility"
 	"reflect"
+	"strconv"
 	"strings"
 )
 
@@ -12,8 +13,8 @@ type PgQuery struct {
 	RecordField   []string      `json:"record_field" Testing:"字段"`
 	RecordOrder   []string        `json:"record_order" Testing:"排序"`
 	RecordGroup   []string        `json:"record_group" Testing:"分组"`
-	RecordPage    int           `json:"record_page" Testing:"页数"`
-	RecordSize    int           `json:"record_size" Testing:"每页数据量"`
+	RecordPage    string           `json:"record_page" Testing:"页数"`
+	RecordSize    string           `json:"record_size" Testing:"每页数据量"`
 	SqlQuery      string        `json:"sql_query,string" Testing:"sql语句"`
 	WhereSqlQuery string        `json:"where_sql_query" Testing:"sql条件"`
 	Args          []interface{} `json:"args" Testing:"值"`
@@ -176,7 +177,7 @@ func (db *PgQuery) WhereId(id interface{}) *PgQuery {
 	db.Args = append(db.Args, id)
 	return db
 }
-func (db *PgQuery) PageSize(page int, size int) *PgQuery {
+func (db *PgQuery) PageSize(page string, size string) *PgQuery {
 	db.RecordPage = page
 	db.RecordSize = size
 	return db
@@ -220,15 +221,15 @@ func (db *PgQuery) OperateFindOrderBy() {
 }
 
 func (db *PgQuery) OperateFindPageSize() {
-	if db.RecordPage != 0 {
-		if db.RecordSize == 0 {
-			db.RecordSize = 10
+	page,_ := strconv.Atoi(db.RecordPage)
+	if page != 0 {
+		size,_ := strconv.Atoi(db.RecordSize)
+		if size == 0 {
+			size = 10
 		}
-		var limita int = (db.RecordPage - 1) * db.RecordSize
 		db.SqlQuery += "limit ? OFFSET ? "
-		db.Args = append(db.Args, db.RecordSize)
-		db.Args = append(db.Args, limita)
-
+		db.Args = append(db.Args, size)
+		db.Args = append(db.Args, (page - 1) * size)
 	}
 
 }

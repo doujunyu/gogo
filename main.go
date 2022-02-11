@@ -101,7 +101,7 @@ func main() {
 			if i[0].(int) != 0{
 				//query.Where("up_down = ?",i[0].(int))
 			}
-		},1).PageSize(1,10).ToSql()
+		},1).PageSize("1","10").ToSql()
 		fmt.Println(goodsSql,arge)
 		j.JsonSuccess()
 		return
