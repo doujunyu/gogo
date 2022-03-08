@@ -70,7 +70,15 @@ func main() {
 	//简单的例子
 	r.GET("/demo", func(j *job.Job) {
 		input := j.Input
-		gogo_log.Error("demo","记录一条错误信息")
+		//gogo_log.Error("demo","记录一条错误信息")
+		time.Sleep(5 * time.Second)
+		gogo_log.Write("前缀","gogo","正常信息")
+		j.JsonSuccess(input,"这里是get提交")
+	})
+	r.GET("/demo1", func(j *job.Job) {
+		input := j.Input
+
+
 		//gogo_log.Write("前缀","gogo","正常信息")
 		j.JsonSuccess(input,"这里是get提交")
 	})
@@ -171,7 +179,7 @@ func main() {
 			j.JsonError(nil,"账号或密码错误")
 			return
 		}
-		//r.ServerClose<-1 //执行关机
+		r.ServerClose<-1 //执行关机
 		j.JsonSuccess(nil,"正在关机")
 	})
 	//文件上传

@@ -1,13 +1,11 @@
 package gogo
 
 import (
-	"context"
 	"fmt"
 	"github.com/doujunyu/gogo/gogo_log"
 	"github.com/doujunyu/gogo/job"
 	"net/http"
 	"runtime/debug"
-	"time"
 )
 
 // GET 请求
@@ -67,44 +65,6 @@ func (c *Centre) VIEW(relativePath string, HandlerFunc ...HandlerFunc) {
 	c.requestMapData(relativePath, "POST", HandlerFunc...)
 }
 
-
-
-// SetClose 设置执行关闭服务
-func (c *Centre) setClose() {
-	<-c.ServerClose
-	ServerStatus = ServerStatusSystemForbid
-	fmt.Println("http服务器已经停止外网访问!")
-	close(gogo_log.GlobalLogData.LogChan)
-	fmt.Println("日志已停止写入!")
-	fmt.Println("正在清理管道中日志信息...")
-	logChanLenI := 0
-	for {
-		logChanLenI++
-		logChanLen := len(gogo_log.GlobalLogData.LogChan)
-		if logChanLen == 0 {
-			break
-		}
-		fmt.Print(logChanLen, "->")
-		time.Sleep(time.Second)
-		if logChanLenI == 10 {
-			logChanLenI = 0
-			fmt.Println()
-		}
-	}
-	fmt.Println("日志清理完毕")
-	fmt.Println("15秒后关闭计算机...")
-	tx, cancel := context.WithTimeout(context.TODO(), 20*time.Second)
-	defer cancel()
-	for i := 15; i > 0; i-- {
-		if i == 0 || i == 5 || i == 10 {
-			fmt.Println()
-		}
-		time.Sleep(time.Second)
-		fmt.Print(i, "->")
-	}
-	fmt.Println("正在关闭...")
-	_ = c.Server.Shutdown(tx)
-}
 
 // 组装所有接口路径
 func (c *Centre) requestMapData(relativePath string, route string, handlerFunc ...HandlerFunc) {

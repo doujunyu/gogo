@@ -1,11 +1,16 @@
 package gogo
 
 import (
+	"context"
+	"fmt"
 	"github.com/doujunyu/gogo/cache"
 	"github.com/doujunyu/gogo/gogo_log"
 	"github.com/doujunyu/gogo/job"
 	_ "github.com/joho/godotenv/autoload"
 	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
 	"time"
 )
 
@@ -52,12 +57,37 @@ func ReadyGo() *Centre {
 // Run 启动
 func (c *Centre) Run(addr ...interface{}) {
 	c.createRequestMapDataRun()          //生成路由接口
-	go c.setClose()                      //软关闭服务
 	go gogo_log.LogChanOut()             //日志管道处理
 	go cache.ChanLongTime()              //缓存清除过期数据
 	c.Server.Addr = resolveAddress(addr) //确认端口
-	_ = c.Server.ListenAndServe()        //启动
+	go func() {
+		_ = c.Server.ListenAndServe()
+	}() //启动
+	listenSignal(context.Background(),c)
 }
 
+func listenSignal(ctx context.Context, c *Centre) {
+	sigs := make(chan os.Signal, 1) //Signal代表一个操作系统信号。
+	signal.Notify(sigs, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
+
+	select {
+	case <-sigs:
+		gogo_log.Write("服务器关闭","gogo_server","服务器内Ctrl+C关闭")
+	case <-c.ServerClose:
+		gogo_log.Write("服务器关闭","gogo_server","服务器接口调用被关闭")
+	}
+	ServerStatus = ServerStatusSystemForbid
+	fmt.Println("http服务器已经停止外网访问!")
+	fmt.Println("5秒后关闭计算机...")
+	for i := 5; i > 0; i-- {
+		time.Sleep(time.Second)
+		fmt.Print(i, "->")
+	}
+	fmt.Println("正在关闭...")
+	_ = c.Server.Shutdown(ctx)
+	fmt.Println("服务器执行关闭彻底完成")
+
+
+}
 
 
