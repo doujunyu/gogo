@@ -41,12 +41,12 @@ func init() {
 }
 
 // Error 报错文件(文件名,内容)(error)
-func Error(FileName string, content string) {
-	Write("", FileName+"_error", content)
+func Error(FileName string, prefix string, content string) {
+	Write(FileName+"_error", prefix, content)
 }
 
 // Write 写入日志 (前缀,文件名,内容)(error)
-func Write(prefix string, FileName string, content string) {
+func Write(FileName string, prefix string, content string) {
 	GlobalLogData.LogChan <- &LogWriteStrings{
 		Url:      GlobalLogData.Path,
 		FileName: FileName,
@@ -59,7 +59,7 @@ func Write(prefix string, FileName string, content string) {
 func LogChanOut() {
 	for {
 		data := <-GlobalLogData.LogChan
-		if data != nil{
+		if data != nil {
 			logWrite(data.Url, data.FileName, data.Prefix, data.Content, data.Ctime) //日志内存
 		}
 	}

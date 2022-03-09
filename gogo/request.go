@@ -110,7 +110,7 @@ func (c *Centre) createRequestMapDataRun() {
 				defer func() {
 					if err := recover(); err != nil {
 						logMessage := fmt.Sprintf("%v请求 路由:%v 参数%v \n 报错详情:%v \n %v",r.Method,relativePath,jobs.Input, err,string(debug.Stack()))
-						gogo_log.Write("内部错误", "error", logMessage)
+						gogo_log.Write("error","内部错误",  logMessage)
 						jobs.JsonError(nil, "执行错误", 500)
 						return
 					}

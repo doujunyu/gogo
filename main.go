@@ -45,7 +45,7 @@ func main() {
 
 	r := gogo.ReadyGo()
 	r.GET("/demosql", func(j *job.Job) {
-		gogo_log.Write("前缀","gogo","正常信息")
+		gogo_log.Write("gogo","前缀","正常信息")
 		data := make(map[string]interface{})
 		data["user_id"] = 1
 		data["cat_id"] = 1
@@ -72,7 +72,7 @@ func main() {
 		input := j.Input
 		//gogo_log.Error("demo","记录一条错误信息")
 		time.Sleep(5 * time.Second)
-		gogo_log.Write("前缀","gogo","正常信息")
+		gogo_log.Write("gogo","前缀","正常信息")
 		j.JsonSuccess(input,"这里是get提交")
 	})
 	r.GET("/demo1", func(j *job.Job) {
@@ -84,22 +84,22 @@ func main() {
 	})
 	r.POST("/demo", func(j *job.Job) {
 		//input := j.Input
-		gogo_log.Error("demo","记录一条错误信息")
-		gogo_log.Write("前缀","gogo","正常信息")
+		gogo_log.Error("demo","","记录一条错误信息")
+		gogo_log.Write("gogo","前缀","正常信息")
 		j.JsonSuccess(nil,"这里是post提交")
 	})
 	//之前中间件
 	r.GET("/beforeGroup",group, func(j *job.Job) {
 		input := j.Input
-		gogo_log.Error("demo","记录一条错误信息")
-		gogo_log.Write("前缀","gogo","正常信息")
+		gogo_log.Error("demo","","记录一条错误信息")
+		gogo_log.Write("gogo","前缀","正常信息")
 		j.JsonSuccess(input)
 	})
 	//之后中间件
 	r.GET("/laterGroup", func(j *job.Job) {
 		input := j.Input
-		gogo_log.Error("demo","记录一条错误信息")
-		gogo_log.Write("前缀","gogo","正常信息")
+		gogo_log.Error("demo","","记录一条错误信息")
+		gogo_log.Write("gogo","前缀","正常信息")
 		j.JsonSuccess(input)
 	},group)
 	//数据库查询

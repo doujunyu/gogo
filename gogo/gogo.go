@@ -72,9 +72,9 @@ func listenSignal(ctx context.Context, c *Centre) {
 
 	select {
 	case <-sigs:
-		gogo_log.Write("服务器关闭","gogo_server","服务器内Ctrl+C关闭")
+		gogo_log.Write("gogo_server","服务器关闭","服务器内Ctrl+C关闭")
 	case <-c.ServerClose:
-		gogo_log.Write("服务器关闭","gogo_server","服务器接口调用被关闭")
+		gogo_log.Write("gogo_server","服务器关闭","服务器接口调用被关闭")
 	}
 	ServerStatus = ServerStatusSystemForbid
 	fmt.Println("http服务器已经停止外网访问!")
