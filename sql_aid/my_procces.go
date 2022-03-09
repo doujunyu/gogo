@@ -8,16 +8,17 @@ import (
 )
 
 type MyQuery struct {
-	RecordTable   string        `json:"record_table" Testing:"表明"`
-	RecordField   []string      `json:"record_field" Testing:"字段"`
-	RecordOrder   []string        `json:"record_order" Testing:"排序"`
-	RecordGroup   []string        `json:"record_group" Testing:"分组"`
-	RecordPage    string           `json:"record_page" Testing:"页数"`
-	RecordSize    string           `json:"record_size" Testing:"每页数据量"`
-	SqlQuery      string        `json:"sql_query,string" Testing:"sql语句"`
-	WhereSqlQuery string        `json:"where_sql_query" Testing:"sql条件"`
-	Args          []interface{} `json:"args" Testing:"值"`
-
+	RecordTable    string                 `json:"record_table" Testing:"表明"`
+	RecordField    []string               `json:"record_field" Testing:"字段"`
+	RecordOrder    []string               `json:"record_order" Testing:"排序"`
+	RecordGroup    []string               `json:"record_group" Testing:"分组"`
+	RecordPage     string                 `json:"record_page" Testing:"页数"`
+	RecordSize     string                 `json:"record_size" Testing:"每页数据量"`
+	RecordIncrease map[string]interface{} `json:"record_increase" Testing:"编辑中的增加数据"`
+	RecordDecrease map[string]interface{} `json:"record_decrease" Testing:"编辑中的减少数据"`
+	SqlQuery       string                 `json:"sql_query,string" Testing:"sql语句"`
+	WhereSqlQuery  string                 `json:"where_sql_query" Testing:"sql条件"`
+	Args           []interface{}          `json:"args" Testing:"值"`
 }
 type MyChildQuery func(*MyQuery, ...interface{})
 
@@ -35,6 +36,7 @@ func (db *MyQuery) jointSql() (string, []interface{}) {
 	db.OperateFindToSql()
 	return db.SqlQuery, db.Args
 }
+
 //查询固定方法
 
 func (db *MyQuery) Table(Table string) *MyQuery {
@@ -49,11 +51,11 @@ func (db *MyQuery) Field(field ...string) *MyQuery {
 	return db
 }
 func (db *MyQuery) OrderBy(Order string) *MyQuery {
-	db.RecordOrder = append(db.RecordOrder,Order)
+	db.RecordOrder = append(db.RecordOrder, Order)
 	return db
 }
 func (db *MyQuery) GroupBy(groupBy string) *MyQuery {
-	db.RecordGroup = append(db.RecordGroup,groupBy)
+	db.RecordGroup = append(db.RecordGroup, groupBy)
 	return db
 }
 
@@ -64,7 +66,7 @@ func (db *MyQuery) Where(field string, val interface{}) *MyQuery {
 		db.WhereSqlQuery += "and "
 	}
 	db.WhereSqlQuery += field + " "
-	if val != nil{
+	if val != nil {
 		db.Args = append(db.Args, val)
 	}
 	return db
@@ -72,11 +74,11 @@ func (db *MyQuery) Where(field string, val interface{}) *MyQuery {
 func (db *MyQuery) WhereOr(field string, val interface{}) *MyQuery {
 	if db.WhereSqlQuery != "" {
 		db.WhereSqlQuery += "and "
-	}else{
+	} else {
 		db.WhereSqlQuery += "OR "
 	}
 	db.WhereSqlQuery += "(" + field + ") "
-	if val != nil{
+	if val != nil {
 		db.Args = append(db.Args, val)
 	}
 	return db
@@ -110,7 +112,7 @@ func (db *MyQuery) WhereNotIn(field string, condition ...interface{}) *MyQuery {
 func (db *MyQuery) WhereRaw(childQuery MyChildQuery, val ...interface{}) *MyQuery {
 	check := &MyQuery{}
 	childQuery(check, val...)
-	checkSql,args := check.jointSql()
+	checkSql, args := check.jointSql()
 	if checkSql == "" {
 		return db
 	}
@@ -127,13 +129,13 @@ func (db *MyQuery) WhereRaw(childQuery MyChildQuery, val ...interface{}) *MyQuer
 func (db *MyQuery) WhereOrRaw(childQuery MyChildQuery, val ...interface{}) *MyQuery {
 	check := &MyQuery{}
 	childQuery(check, val...)
-	checkSql,args := check.jointSql()
+	checkSql, args := check.jointSql()
 	if checkSql == "" {
 		return db
 	}
 	if db.WhereSqlQuery != "" {
 		db.WhereSqlQuery += "and ("
-	}else{
+	} else {
 		db.WhereSqlQuery += "( "
 	}
 	db.WhereSqlQuery += checkSql
@@ -148,7 +150,7 @@ func (db *MyQuery) WhereInRaw(field string, childQuery MyChildQuery, val ...inte
 	db.WhereSqlQuery += "`" + field + "` in ("
 	check := &MyQuery{}
 	childQuery(check, val...)
-	checkSql,args := check.jointSql()
+	checkSql, args := check.jointSql()
 	db.WhereSqlQuery += checkSql
 	db.Args = append(db.Args, args...)
 	db.WhereSqlQuery += ") "
@@ -161,7 +163,7 @@ func (db *MyQuery) WhereNotInRaw(field string, childQuery MyChildQuery, val ...i
 	db.WhereSqlQuery += "`" + field + "`not in ("
 	check := &MyQuery{}
 	childQuery(check, val...)
-	checkSql,args := check.jointSql()
+	checkSql, args := check.jointSql()
 	db.WhereSqlQuery += checkSql
 	db.Args = append(db.Args, args...)
 	db.WhereSqlQuery += ") "
@@ -208,30 +210,30 @@ func (db *MyQuery) OperateFindTable() {
 	db.SqlQuery += "FROM " + db.RecordTable + " "
 }
 func (db *MyQuery) OperateFindGroupBy() {
-	if db.RecordGroup != nil{
-		db.SqlQuery += "GROUP BY " + strings.Join(db.RecordGroup,",") + " "
+	if db.RecordGroup != nil {
+		db.SqlQuery += "GROUP BY " + strings.Join(db.RecordGroup, ",") + " "
 	}
 }
 func (db *MyQuery) OperateFindOrderBy() {
-	if db.RecordOrder != nil{
-		db.SqlQuery += "ORDER BY " + strings.Join(db.RecordOrder,",") + " "
+	if db.RecordOrder != nil {
+		db.SqlQuery += "ORDER BY " + strings.Join(db.RecordOrder, ",") + " "
 	}
 }
 
 func (db *MyQuery) OperateFindPageSize() {
-	page,err := strconv.Atoi(db.RecordPage)
-	if err != nil{
+	page, err := strconv.Atoi(db.RecordPage)
+	if err != nil {
 		return
 	}
 	if page <= 0 {
 		page = 1
 	}
-	size,_ := strconv.Atoi(db.RecordSize)
+	size, _ := strconv.Atoi(db.RecordSize)
 	if size == 0 {
 		size = 10
 	}
 	db.SqlQuery += "limit ?,? "
-	db.Args = append(db.Args, (page - 1) * size)
+	db.Args = append(db.Args, (page-1)*size)
 	db.Args = append(db.Args, size)
 
 }
@@ -240,17 +242,17 @@ func (db *MyQuery) OperateFindPageSize() {
 // | 添加方法
 // +----------------------------------------------------------------------
 
-func (db *MyQuery) InsertByMap(data *map[string]interface{}) (string,[]interface{}) {
+func (db *MyQuery) InsertByMap(data *map[string]interface{}) (string, []interface{}) {
 	db.OperateInsertTable()
 	db.OperateInsertDataByMap(data)
 	return db.SqlQuery, db.Args
 }
-func (db *MyQuery) InsertByStruct(data interface{}) (string,[]interface{}) {
+func (db *MyQuery) InsertByStruct(data interface{}) (string, []interface{}) {
 	db.OperateInsertTable()
 	db.OperateInsertDataByStruct(data)
 	return db.SqlQuery, db.Args
 }
-func (db *MyQuery) InsertAllByMap(datas *[]map[string]interface{}) (string,[]interface{}) {
+func (db *MyQuery) InsertAllByMap(datas *[]map[string]interface{}) (string, []interface{}) {
 	db.OperateInsertTable()
 	for key, val := range *datas {
 		if key == 0 {
@@ -262,7 +264,7 @@ func (db *MyQuery) InsertAllByMap(datas *[]map[string]interface{}) (string,[]int
 	return db.SqlQuery, db.Args
 
 }
-func (db *MyQuery) InsertAllByStruct(datas []interface{}) (string,[]interface{}) {
+func (db *MyQuery) InsertAllByStruct(datas []interface{}) (string, []interface{}) {
 	db.OperateInsertTable()
 	for key, val := range datas {
 		if key == 0 {
@@ -272,7 +274,6 @@ func (db *MyQuery) InsertAllByStruct(datas []interface{}) (string,[]interface{})
 		}
 	}
 	return db.SqlQuery, db.Args
-
 
 }
 
@@ -360,11 +361,11 @@ func (db *MyQuery) OperateInsertDataByStructValue(data interface{}) {
 // | 更改方法
 // +----------------------------------------------------------------------
 
-func (db *MyQuery) UpdateByMap(data *map[string]interface{}) (string,[]interface{}) {
+func (db *MyQuery) UpdateByMap(data *map[string]interface{}) (string, []interface{}) {
 	db.OperateUpdateByMapData(data)
 	return db.SqlQuery, db.Args
 }
-func (db *MyQuery) UpdateByStruct(data interface{}) (string,[]interface{}) {
+func (db *MyQuery) UpdateByStruct(data interface{}) (string, []interface{}) {
 	db.OperateUpdateByStructData(data)
 	return db.SqlQuery, db.Args
 }
@@ -372,22 +373,27 @@ func (db *MyQuery) UpdateByStruct(data interface{}) (string,[]interface{}) {
 //整理更改查询的sql和参数
 
 func (db *MyQuery) OperateUpdateByMapData(data *map[string]interface{}) {
-	numData := len(*data)
-	if numData > 0 {
-		db.SqlQuery += "UPDATE `" + db.RecordTable + "` "
-		db.SqlQuery += "SET "
-		var args []interface{}
-		for key, val := range *data {
-			db.SqlQuery += " `" + key + "` = ? ,"
-			args = append(args, val)
-		}
-		db.Args = append(args, db.Args...)
-		db.SqlQuery = db.SqlQuery[:len(db.SqlQuery)-1]
-		if db.WhereSqlQuery != "" {
-			db.SqlQuery += "where "
-		}
-		db.SqlQuery += db.WhereSqlQuery
+	db.SqlQuery += "UPDATE `" + db.RecordTable + "` "
+	db.SqlQuery += "SET "
+	var args []interface{}
+	for key, val := range *data {
+		db.SqlQuery += " `" + key + "` = ? ,"
+		args = append(args, val)
 	}
+	for incKey, incVal := range db.RecordIncrease {
+		db.SqlQuery += " " + incKey + " = "+incKey+" + ? ,"
+		args = append(args, incVal)
+	}
+	for decKey, decVal := range db.RecordDecrease {
+		db.SqlQuery += " " + decKey + " = "+decKey+" - ? ,"
+		args = append(args, decVal)
+	}
+	db.Args = append(args, db.Args...)
+	db.SqlQuery = db.SqlQuery[:len(db.SqlQuery)-1]
+	if db.WhereSqlQuery != "" {
+		db.SqlQuery += "where "
+	}
+	db.SqlQuery += db.WhereSqlQuery
 }
 func (db *MyQuery) OperateUpdateByStructData(data interface{}) {
 	dataType := reflect.TypeOf(data).Elem()
@@ -395,24 +401,29 @@ func (db *MyQuery) OperateUpdateByStructData(data interface{}) {
 	if dataType.Kind() != reflect.Struct {
 		return
 	}
-	numField := dataValue.NumField()
-	if numField > 0 {
-		db.SqlQuery += "UPDATE `" + db.RecordTable + "` "
-		db.SqlQuery += "SET "
-		var args []interface{}
-		for i := 0; i < dataValue.NumField(); i++ {
-			field := dataType.Field(i).Tag.Get("json")
-			structValue := dataValue.Field(i).Interface()
-			db.SqlQuery += " `" + field + "` = ? ,"
-			args = append(args, structValue)
-		}
-		db.SqlQuery = db.SqlQuery[:len(db.SqlQuery)-1]
-		db.Args = append(args, db.Args...)
-		if db.WhereSqlQuery != "" {
-			db.SqlQuery += "where "
-		}
-		db.SqlQuery += db.WhereSqlQuery
+	db.SqlQuery += "UPDATE `" + db.RecordTable + "` "
+	db.SqlQuery += "SET "
+	var args []interface{}
+	for i := 0; i < dataValue.NumField(); i++ {
+		field := dataType.Field(i).Tag.Get("json")
+		structValue := dataValue.Field(i).Interface()
+		db.SqlQuery += " `" + field + "` = ? ,"
+		args = append(args, structValue)
 	}
+	for incKey, incVal := range db.RecordIncrease {
+		db.SqlQuery += " " + incKey + " = "+incKey+" + ? ,"
+		args = append(args, incVal)
+	}
+	for decKey, decVal := range db.RecordDecrease {
+		db.SqlQuery += " " + decKey + " = "+decKey+" - ? ,"
+		args = append(args, decVal)
+	}
+	db.SqlQuery = db.SqlQuery[:len(db.SqlQuery)-1]
+	db.Args = append(args, db.Args...)
+	if db.WhereSqlQuery != "" {
+		db.SqlQuery += "where "
+	}
+	db.SqlQuery += db.WhereSqlQuery
 }
 
 // +----------------------------------------------------------------------
@@ -420,7 +431,7 @@ func (db *MyQuery) OperateUpdateByStructData(data interface{}) {
 // +----------------------------------------------------------------------
 
 // Delete 删除方法
-func (db *MyQuery) Delete() (string,[]interface{}) {
+func (db *MyQuery) Delete() (string, []interface{}) {
 	db.OperateDeleteData()
 	return db.SqlQuery, db.Args
 }
@@ -441,5 +452,7 @@ func (db *MyQuery) OperateDeleteData() {
 func MyTable(table string) *MyQuery {
 	return &MyQuery{
 		RecordTable: table,
+		RecordIncrease: make(map[string]interface{}),
+		RecordDecrease: make(map[string]interface{}),
 	}
 }
