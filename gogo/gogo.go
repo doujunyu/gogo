@@ -80,8 +80,9 @@ func listenSignal(ctx context.Context, c *Centre) {
 	fmt.Println("http服务器已经停止外网访问!")
 	fmt.Println("5秒后关闭计算机...")
 	for i := 5; i > 0; i-- {
-		time.Sleep(time.Second)
+
 		fmt.Print(i, "->")
+		time.Sleep(time.Second)
 	}
 	fmt.Println("正在关闭...")
 	_ = c.Server.Shutdown(ctx)
