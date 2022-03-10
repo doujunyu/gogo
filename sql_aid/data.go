@@ -2,6 +2,7 @@ package sql_aid
 
 import (
 	"database/sql"
+	"time"
 )
 
 
@@ -43,6 +44,8 @@ func DataToMap(rows *sql.Rows,err error) ([]map[string]interface{}, error) {
 				item[columns[i]] = *data.(*interface{}) //本身是int类型
 			case []uint8:
 				item[columns[i]] = string((*data.(*interface{})).([]byte)) //转成字符串
+			case time.Time:
+				item[columns[i]] = (*data.(*interface{})).(time.Time).Format("2006-01-02 15:04:05")
 			default:
 				item[columns[i]] = *data.(*interface{}) //不知道的类型不动
 			}

@@ -116,13 +116,14 @@ func main() {
 	},group)
 	//数据库查询
 	r.GET("/SqlFind", func(j *job.Job) {
-		goodsSql,arge := sql_aid.PgTable("table").Where("shop_id = ?",1).WhereOrRaw(func(query *sql_aid.PgQuery, i ...interface{}) {
+		goodsSql,arge := sql_aid.PgTable("self_shop").Where("id = ?",1).WhereOrRaw(func(query *sql_aid.PgQuery, i ...interface{}) {
 			if i[0].(int) != 0{
 				//query.Where("up_down = ?",i[0].(int))
 			}
 		},1).PageSize("0","10").ToSql()
-		fmt.Println(goodsSql,arge)
-		j.JsonSuccess()
+		data,err :=sql_aid.DataToMap(pgsql.Query(goodsSql,arge...))
+		fmt.Println(data,err)
+		j.JsonSuccess(data)
 		return
 	//	set := sql.Db("THIS_TABLE")
 	//	set.Field("id", "nickname")
