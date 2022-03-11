@@ -493,9 +493,9 @@ func (db *PgQuery) replacePlace() {
 	lenSplit := len(split)
 	for i, s := range split {
 		if i+1 >= lenSplit {
-			db.SqlQuery += fmt.Sprintf("%v ", s)
+			db.SqlQuery += fmt.Sprintf("%v", s)
 		} else {
-			db.SqlQuery += fmt.Sprintf("%v $%v ", s, i+1)
+			db.SqlQuery += fmt.Sprintf("%v$%v", s, i+1)
 		}
 	}
 }

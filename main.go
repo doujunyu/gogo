@@ -116,6 +116,8 @@ func main() {
 	},group)
 	//数据库查询
 	r.GET("/SqlFind", func(j *job.Job) {
+		//goodsSql,arge := sql_aid.PgTable("self_shop").Where("username like %?%",1).ToSql()
+		//fmt.Println(goodsSql,arge)
 		goodsSql,arge := sql_aid.PgTable("self_shop").Where("id = ?",1).WhereOrRaw(func(query *sql_aid.PgQuery, i ...interface{}) {
 			if i[0].(int) != 0{
 				//query.Where("up_down = ?",i[0].(int))
