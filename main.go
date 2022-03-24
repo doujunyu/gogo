@@ -19,26 +19,26 @@ var MySqlLine *sql.DB
 var PGSqlLine *sql.DB
 func main() {
 	//链接数pgsql
-	pgsql,err := sql_aid.Open("postgres",os.Getenv("PGSQL_URL"))
-	fmt.Println(os.Getenv("PGSQL_URL"))
-	if err != nil {
-		fmt.Println("数据路链接错误",err)
-		return
-	}
-	PGSqlLine = pgsql
-	PGSqlLine.SetConnMaxLifetime(time.Minute * 3)
-	PGSqlLine.SetMaxOpenConns(10)
-	PGSqlLine.SetMaxIdleConns(10)
-	//链接mysql
-	mysql, err := sql.Open("mysql", os.Getenv("MYSQL_URL"))
-	if err != nil {
-		fmt.Println("数据路链接错误")
-		return
-	}
-	MySqlLine = mysql
-	MySqlLine.SetConnMaxLifetime(time.Minute * 3)
-	MySqlLine.SetMaxOpenConns(10)
-	MySqlLine.SetMaxIdleConns(10)
+	//pgsql,err := sql_aid.Open("postgres",os.Getenv("PGSQL_URL"))
+	//fmt.Println(os.Getenv("PGSQL_URL"))
+	//if err != nil {
+	//	fmt.Println("数据路链接错误",err)
+	//	return
+	//}
+	//PGSqlLine = pgsql
+	//PGSqlLine.SetConnMaxLifetime(time.Minute * 3)
+	//PGSqlLine.SetMaxOpenConns(10)
+	//PGSqlLine.SetMaxIdleConns(10)
+	////链接mysql
+	//mysql, err := sql.Open("mysql", os.Getenv("MYSQL_URL"))
+	//if err != nil {
+	//	fmt.Println("数据路链接错误")
+	//	return
+	//}
+	//MySqlLine = mysql
+	//MySqlLine.SetConnMaxLifetime(time.Minute * 3)
+	//MySqlLine.SetMaxOpenConns(10)
+	//MySqlLine.SetMaxIdleConns(10)
 
 
 
@@ -72,11 +72,12 @@ func main() {
 		incData := make(map[string]interface{})
 		incData["number"] = 5
 		incData["price"] = 5
-		set,slic := sql_aid.PgTable("self_user_shopping_cart").WhereId(1).Dec(&incData).UpdateByMap(&data) //生成sql语句
-		_,err := PGSqlLine.Exec(set,slic...)
-		if err != nil{
-			j.JsonError(nil,err.Error())
-		}
+		set,slic := sql_aid.PgTable("self_user_shopping_cart").WhereId(1).Dec("number",4).Dec("price",100).UpdateByMap(&data) //生成sql语句
+		fmt.Println(set,slic)
+		//_,err := PGSqlLine.Exec(set,slic...)
+		//if err != nil{
+		//	j.JsonError(nil,err.Error())
+		//}
 		j.JsonSuccess()
 	})
 	//简单的例子
@@ -123,9 +124,10 @@ func main() {
 				//query.Where("up_down = ?",i[0].(int))
 			}
 		},1).PageSize("0","10").ToSql()
-		data,err :=sql_aid.DataToMap(pgsql.Query(goodsSql,arge...))
-		fmt.Println(data,err)
-		j.JsonSuccess(data)
+		fmt.Println(goodsSql,arge)
+		//data,err :=sql_aid.DataToMap(pgsql.Query(goodsSql,arge...))
+		//fmt.Println(data,err)
+		j.JsonSuccess(goodsSql)
 		return
 	//	set := sql.Db("THIS_TABLE")
 	//	set.Field("id", "nickname")

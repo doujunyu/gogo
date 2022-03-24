@@ -50,6 +50,26 @@ func (db *MyQuery) Field(field ...string) *MyQuery {
 	db.RecordField = field
 	return db
 }
+func (db *MyQuery) Inc(field string,data interface{}) *MyQuery {
+	db.RecordIncrease[field] = data
+	return db
+}
+func (db *MyQuery) IncAll(incMap *map[string]interface{}) *MyQuery {
+	for key, val := range *incMap {
+		db.RecordIncrease[key] = val
+	}
+	return db
+}
+func (db *MyQuery) Dec(field string,data interface{}) *MyQuery {
+	db.RecordDecrease[field] = data
+	return db
+}
+func (db *MyQuery) DecAll(decMap *map[string]interface{}) *MyQuery {
+	for key, val := range *decMap {
+		db.RecordDecrease[key] = val
+	}
+	return db
+}
 func (db *MyQuery) OrderBy(Order string) *MyQuery {
 	db.RecordOrder = append(db.RecordOrder, Order)
 	return db

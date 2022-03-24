@@ -52,14 +52,22 @@ func (db *PgQuery) Field(field ...string) *PgQuery {
 	db.RecordField = field
 	return db
 }
-
-func (db *PgQuery) Inc(incMap *map[string]interface{}) *PgQuery {
+func (db *PgQuery) Inc(field string,data interface{}) *PgQuery {
+	db.RecordIncrease[field] = data
+	return db
+}
+func (db *PgQuery) IncAll(incMap *map[string]interface{}) *PgQuery {
 	for key, val := range *incMap {
 		db.RecordIncrease[key] = val
 	}
 	return db
 }
-func (db *PgQuery) Dec(decMap *map[string]interface{}) *PgQuery {
+func (db *PgQuery) Dec(field string,data interface{}) *PgQuery {
+	db.RecordDecrease[field] = data
+	return db
+}
+
+func (db *PgQuery) DecAll(decMap *map[string]interface{}) *PgQuery {
 	for key, val := range *decMap {
 		db.RecordDecrease[key] = val
 	}
