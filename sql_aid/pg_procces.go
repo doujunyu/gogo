@@ -203,6 +203,12 @@ func (db *PgQuery) WhereId(id interface{}) *PgQuery {
 	return db
 }
 func (db *PgQuery) PageSize(page string, size string) *PgQuery {
+	if page == ""{
+		page = "1"
+	}
+	if size == ""{
+		size = "10"
+	}
 	db.RecordPage = page
 	db.RecordSize = size
 	return db
