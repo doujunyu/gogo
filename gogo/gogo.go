@@ -37,8 +37,8 @@ func ReadyGo() *Centre {
 		Middleware:   []HandlerFunc{},
 		ServerClose:  make(chan int, 1),
 		Server: &http.Server{
-			Addr: ":7070",
-			Handler: http.TimeoutHandler(http.DefaultServeMux, time.Second*(60*5), func() string {
+			Addr: ":8000",
+			Handler: http.TimeoutHandler(http.DefaultServeMux, time.Second*(3600 * 3), func() string {
 				msg := job.Message{
 					Data: make([]int, 0),
 					Msg:  "操作失败",
@@ -46,9 +46,9 @@ func ReadyGo() *Centre {
 				}
 				return string(msg.Json(nil))
 			}()),
-			ReadTimeout:    10 * time.Second,
-			WriteTimeout:   10 * time.Second,
-			MaxHeaderBytes: 1 << 20,
+// 			ReadTimeout:    10 * time.Second,
+// 			WriteTimeout:   10 * time.Second,
+// 			MaxHeaderBytes: 1 << 20,
 		},
 		gatherRequest: make(map[string]map[string]*[]HandlerFunc),
 	}
