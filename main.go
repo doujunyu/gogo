@@ -50,15 +50,11 @@ func main() {
 		data["user_id"] = 1
 		data["cat_id"] = 1
 
-		set,slic := sql_aid.MyTable("sx_user_like").InsertByMap(&data) //生成sql语句
+		set,slic := sql_aid.MyTable("sx_user_like").InsertByMap(data) //生成sql语句
 		tx,err := MySqlLine.Begin()                             //开启事务
 		defer tx.Rollback()
 		datas,err := tx.Exec(set,slic...)//进行添加
-		lists := make([]int,1)//开始写让程序报错
-		lists[0] = 1
-		lists[2] = 1
 		err = tx.Commit()
-
 		fmt.Println(datas,err)
 		fmt.Println(datas.LastInsertId())
 		if err != nil{
@@ -72,7 +68,7 @@ func main() {
 		incData := make(map[string]interface{})
 		incData["number"] = 5
 		incData["price"] = 5
-		set,slic := sql_aid.PgTable("self_user_shopping_cart").WhereId(1).Dec("number",4).Dec("price",100).UpdateByMap(&data) //生成sql语句
+		set,slic := sql_aid.PgTable("self_user_shopping_cart").WhereId(1).Dec("number",4).Dec("price",100).UpdateByMap(data) //生成sql语句
 		fmt.Println(set,slic)
 		//_,err := PGSqlLine.Exec(set,slic...)
 		//if err != nil{
@@ -80,24 +76,13 @@ func main() {
 		//}
 		j.JsonSuccess()
 	})
-	//简单的例子
-	r.GET("/demo", func(j *job.Job) {
-		input := j.Input
-		//gogo_log.Error("demo","记录一条错误信息")
-		time.Sleep(5 * time.Second)
-		gogo_log.Write("gogo","前缀","正常信息")
-		j.JsonSuccess(input,"这里是get提交")
-	})
+
 	r.GET("/demo1", func(j *job.Job) {
 		input := j.Input
 
-
-		//gogo_log.Write("前缀","gogo","正常信息")
 		j.JsonSuccess(input,"这里是get提交")
 	})
 	r.POST("/demo", func(j *job.Job) {
-		//input := j.Input
-		gogo_log.Error("demo","","记录一条错误信息")
 		gogo_log.Write("gogo","前缀","正常信息")
 		j.JsonSuccess(nil,"这里是post提交")
 	})
@@ -117,19 +102,6 @@ func main() {
 	},group)
 	//数据库查询
 	r.GET("/SqlFind", func(j *job.Job) {
-		arr := make([]map[string]interface{},0)
-
-		//var i int
-		//for i = 0;i<=5;i++ {
-			dataMap := make(map[string]interface{})
-			dataMap["user_s"] = 1
-			dataMap["user_ss"] = 2
-			dataMap["user_sss"] = 3
-			//arr = append(arr,dataMap)
-
-		//}
-		sql,args := sql_aid.PgTable("table").InsertAllByMap(&arr)
-		fmt.Println(sql,args)
 		//goodsSql,arge := sql_aid.PgTable("self_shop").Where("username like %?%",1).ToSql()
 		//fmt.Println(goodsSql,arge)
 		//goodsSql,arge := sql_aid.PgTable("self_shop").Where("id = ?",1).WhereOrRaw(func(query *sql_aid.PgQuery, i ...interface{}) {
@@ -142,32 +114,28 @@ func main() {
 		////fmt.Println(data,err)
 		//j.JsonSuccess(goodsSql)
 		//return
-	//	set := sql.Db("THIS_TABLE")
-	//	set.Field("id", "nickname")
-	//	set.WhereId("3")
-	//	set.Where("openid", "like", "%4o1Bs%")
-	//	set.Where("status","!=","1")
-	//	set.WhereInRaw("id",func(child *sql.Query,val ...interface{}){
-	//		child.Table("fs_user_address")
-	//		child.Field("user_id","path")
-	//		child.Where("status2","=",2)
-	//	})
-	//	set.WhereOrRaw(func(child *sql.Query,val ...interface{}){
-	//		child.Where("status3","=",val[0])
-	//		child.Where("status4","=",val[1])
-	//		child.WhereBetween("status6",6,6.3)
-	//		child.WhereOrRaw(func(child *sql.Query,val ...interface{}){
-	//			child.Where("status5","=",5)
-	//		})
-	//	},3,4)
-	//	set.OrderBy("id desc")
-	//	set.PageSize(1,10)
-	//	data, err := set.FindOnly()
-	//	if err != nil {
-	//		j.JsonError()
-	//		return
-	//	}
-	//	j.JsonSuccess(data)
+		set := sql_aid.PgTable("THIS_TABLE")
+		set.Field("id", "nickname")
+		set.WhereId("3")
+		set.Where("openid like %?%", "内容")
+		set.Where("status = ?","1")
+		set.WhereInRaw("id",func(child *sql_aid.PgQuery,val ...interface{}){
+			child.Table("fs_user_address")
+			child.Field("user_id","path")
+			child.Where("status2 = ?",2)
+		})
+		set.WhereOrRaw(func(child *sql_aid.PgQuery,val ...interface{}){
+			child.Where("status3 = ?",val[0])
+			child.Where("status4 = ?",val[1])
+			child.WhereOrRaw(func(child *sql_aid.PgQuery,val ...interface{}){
+				child.Where("status5 = ?",5)
+			})
+		},3,4)
+		set.OrderBy("id desc")
+		set.PageSize("1","10")
+		data, rags := set.ToSql()
+		fmt.Println(data,rags)
+		j.JsonSuccess()
 	//})
 	////数据添加
 	//r.GET("/SqlTryAdd",func(j *job.Job){
