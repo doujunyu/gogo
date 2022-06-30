@@ -54,8 +54,8 @@ func (db *MyQuery) Inc(field string,data interface{}) *MyQuery {
 	db.RecordIncrease[field] = data
 	return db
 }
-func (db *MyQuery) IncAll(incMap *map[string]interface{}) *MyQuery {
-	for key, val := range *incMap {
+func (db *MyQuery) IncAll(incMap map[string]interface{}) *MyQuery {
+	for key, val := range incMap {
 		db.RecordIncrease[key] = val
 	}
 	return db
@@ -64,8 +64,8 @@ func (db *MyQuery) Dec(field string,data interface{}) *MyQuery {
 	db.RecordDecrease[field] = data
 	return db
 }
-func (db *MyQuery) DecAll(decMap *map[string]interface{}) *MyQuery {
-	for key, val := range *decMap {
+func (db *MyQuery) DecAll(decMap map[string]interface{}) *MyQuery {
+	for key, val := range decMap {
 		db.RecordDecrease[key] = val
 	}
 	return db
@@ -268,7 +268,7 @@ func (db *MyQuery) OperateFindPageSize() {
 // | 添加方法
 // +----------------------------------------------------------------------
 
-func (db *MyQuery) InsertByMap(data *map[string]interface{}) (string, []interface{}) {
+func (db *MyQuery) InsertByMap(data map[string]interface{}) (string, []interface{}) {
 	db.OperateInsertTable()
 	db.OperateInsertDataByMap(data)
 	return db.SqlQuery, db.Args
@@ -280,13 +280,15 @@ func (db *MyQuery) InsertByStruct(data interface{}) (string, []interface{}) {
 }
 func (db *MyQuery) InsertAllByMap(datas *[]map[string]interface{}) (string, []interface{}) {
 	db.OperateInsertTable()
-	for key, val := range *datas {
-		if key == 0 {
-			db.OperateInsertDataByMap(&val)
-		} else {
-			db.OperateInsertDataByMapValue(&val)
-		}
+	dataSlice := *datas
+	if len(dataSlice) < 1{
+		return "",nil
 	}
+	fieldSlice := db.OperateInsertDataByMap(dataSlice[0])
+	for _, val := range dataSlice[1:] {
+		db.OperateInsertDataByMapValue(val,fieldSlice)
+	}
+
 	return db.SqlQuery, db.Args
 
 }
@@ -310,12 +312,14 @@ func (db *MyQuery) OperateInsertTable() {
 		db.SqlQuery += "INSERT INTO `" + db.RecordTable + "` "
 	}
 }
-func (db *MyQuery) OperateInsertDataByMap(data *map[string]interface{}) {
-	numData := len(*data)
+func (db *MyQuery) OperateInsertDataByMap(data map[string]interface{}) *[]string {
+	numData := len(data)
+	field := make([]string,0)
 	if numData > 0 {
 		db.SqlQuery += "("
 		values := ""
-		for key, val := range *data {
+		for key, val := range data {
+			field = append(field,key)
 			db.SqlQuery += "`" + key + "`,"
 			values += "?,"
 			db.Args = append(db.Args, val)
@@ -324,20 +328,17 @@ func (db *MyQuery) OperateInsertDataByMap(data *map[string]interface{}) {
 		values = values[:len(values)-1]
 		db.SqlQuery += ") VALUES (" + values + ")"
 	}
-
+	return &field
 }
-func (db *MyQuery) OperateInsertDataByMapValue(data *map[string]interface{}) {
+func (db *MyQuery) OperateInsertDataByMapValue(data map[string]interface{},fieldSlice *[]string) {
 	db.SqlQuery += ",( "
 	values := ""
-	numData := len(*data)
-	if numData > 0 {
-		for _, val := range *data {
-			values += "?,"
-			db.Args = append(db.Args, val)
-		}
-		values = values[:len(values)-1]
-		db.SqlQuery += values + ")"
+	for _, val := range *fieldSlice {
+		values += "?,"
+		db.Args = append(db.Args, data[val])
 	}
+	values = values[:len(values)-1]
+	db.SqlQuery += values + ")"
 }
 func (db *MyQuery) OperateInsertDataByStruct(data interface{}) {
 	dataType := reflect.TypeOf(data).Elem()
@@ -387,7 +388,7 @@ func (db *MyQuery) OperateInsertDataByStructValue(data interface{}) {
 // | 更改方法
 // +----------------------------------------------------------------------
 
-func (db *MyQuery) UpdateByMap(data *map[string]interface{}) (string, []interface{}) {
+func (db *MyQuery) UpdateByMap(data map[string]interface{}) (string, []interface{}) {
 	db.OperateUpdateByMapData(data)
 	return db.SqlQuery, db.Args
 }
@@ -398,11 +399,11 @@ func (db *MyQuery) UpdateByStruct(data interface{}) (string, []interface{}) {
 
 //整理更改查询的sql和参数
 
-func (db *MyQuery) OperateUpdateByMapData(data *map[string]interface{}) {
+func (db *MyQuery) OperateUpdateByMapData(data map[string]interface{}) {
 	db.SqlQuery += "UPDATE `" + db.RecordTable + "` "
 	db.SqlQuery += "SET "
 	var args []interface{}
-	for key, val := range *data {
+	for key, val := range data {
 		db.SqlQuery += " `" + key + "` = ? ,"
 		args = append(args, val)
 	}

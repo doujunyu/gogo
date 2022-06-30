@@ -117,18 +117,31 @@ func main() {
 	},group)
 	//数据库查询
 	r.GET("/SqlFind", func(j *job.Job) {
+		arr := make([]map[string]interface{},0)
+
+		//var i int
+		//for i = 0;i<=5;i++ {
+			dataMap := make(map[string]interface{})
+			dataMap["user_s"] = 1
+			dataMap["user_ss"] = 2
+			dataMap["user_sss"] = 3
+			//arr = append(arr,dataMap)
+
+		//}
+		sql,args := sql_aid.PgTable("table").InsertAllByMap(&arr)
+		fmt.Println(sql,args)
 		//goodsSql,arge := sql_aid.PgTable("self_shop").Where("username like %?%",1).ToSql()
 		//fmt.Println(goodsSql,arge)
-		goodsSql,arge := sql_aid.PgTable("self_shop").Where("id = ?",1).WhereOrRaw(func(query *sql_aid.PgQuery, i ...interface{}) {
-			if i[0].(int) != 0{
-				//query.Where("up_down = ?",i[0].(int))
-			}
-		},1).PageSize("0","10").ToSql()
-		fmt.Println(goodsSql,arge)
-		//data,err :=sql_aid.DataToMap(pgsql.Query(goodsSql,arge...))
-		//fmt.Println(data,err)
-		j.JsonSuccess(goodsSql)
-		return
+		//goodsSql,arge := sql_aid.PgTable("self_shop").Where("id = ?",1).WhereOrRaw(func(query *sql_aid.PgQuery, i ...interface{}) {
+		//	if i[0].(int) != 0{
+		//		//query.Where("up_down = ?",i[0].(int))
+		//	}
+		//},1).PageSize("0","10").ToSql()
+		//fmt.Println(goodsSql,arge)
+		////data,err :=sql_aid.DataToMap(pgsql.Query(goodsSql,arge...))
+		////fmt.Println(data,err)
+		//j.JsonSuccess(goodsSql)
+		//return
 	//	set := sql.Db("THIS_TABLE")
 	//	set.Field("id", "nickname")
 	//	set.WhereId("3")

@@ -56,8 +56,8 @@ func (db *PgQuery) Inc(field string,data interface{}) *PgQuery {
 	db.RecordIncrease[field] = data
 	return db
 }
-func (db *PgQuery) IncAll(incMap *map[string]interface{}) *PgQuery {
-	for key, val := range *incMap {
+func (db *PgQuery) IncAll(incMap map[string]interface{}) *PgQuery {
+	for key, val := range incMap {
 		db.RecordIncrease[key] = val
 	}
 	return db
@@ -67,8 +67,8 @@ func (db *PgQuery) Dec(field string,data interface{}) *PgQuery {
 	return db
 }
 
-func (db *PgQuery) DecAll(decMap *map[string]interface{}) *PgQuery {
-	for key, val := range *decMap {
+func (db *PgQuery) DecAll(decMap map[string]interface{}) *PgQuery {
+	for key, val := range decMap {
 		db.RecordDecrease[key] = val
 	}
 	return db
@@ -273,7 +273,7 @@ func (db *PgQuery) OperateFindPageSize() {
 // | 添加方法
 // +----------------------------------------------------------------------
 
-func (db *PgQuery) InsertByMap(data *map[string]interface{}) (string, []interface{}) {
+func (db *PgQuery) InsertByMap(data map[string]interface{}) (string, []interface{}) {
 	db.OperateInsertTable()
 	db.OperateInsertDataByMap(data)
 	db.replacePlace()
@@ -287,12 +287,13 @@ func (db *PgQuery) InsertByStruct(data interface{}) (string, []interface{}) {
 }
 func (db *PgQuery) InsertAllByMap(datas *[]map[string]interface{}) (string, []interface{}) {
 	db.OperateInsertTable()
-	for key, val := range *datas {
-		if key == 0 {
-			db.OperateInsertDataByMap(&val)
-		} else {
-			db.OperateInsertDataByMapValue(&val)
-		}
+	dataSlice := *datas
+	if len(dataSlice) < 1{
+		return "",nil
+	}
+	fieldSlice := db.OperateInsertDataByMap(dataSlice[0])
+	for _, val := range dataSlice[1:] {
+		db.OperateInsertDataByMapValue(val,fieldSlice)
 	}
 	db.replacePlace()
 	return db.SqlQuery, db.Args
@@ -319,12 +320,14 @@ func (db *PgQuery) OperateInsertTable() {
 		db.SqlQuery += "INSERT INTO " + db.RecordTable + " "
 	}
 }
-func (db *PgQuery) OperateInsertDataByMap(data *map[string]interface{}) {
-	numData := len(*data)
+func (db *PgQuery) OperateInsertDataByMap(data map[string]interface{}) *[]string {
+	numData := len(data)
+	field := make([]string,0)
 	if numData > 0 {
 		db.SqlQuery += "("
 		values := ""
-		for key, val := range *data {
+		for key, val := range data {
+			field = append(field,key)
 			db.SqlQuery += key + ","
 			values += "?,"
 			db.Args = append(db.Args, val)
@@ -333,20 +336,17 @@ func (db *PgQuery) OperateInsertDataByMap(data *map[string]interface{}) {
 		values = values[:len(values)-1]
 		db.SqlQuery += ") VALUES (" + values + ")"
 	}
-
+	return &field
 }
-func (db *PgQuery) OperateInsertDataByMapValue(data *map[string]interface{}) {
+func (db *PgQuery) OperateInsertDataByMapValue(data map[string]interface{},fieldSlice *[]string) {
 	db.SqlQuery += ",( "
 	values := ""
-	numData := len(*data)
-	if numData > 0 {
-		for _, val := range *data {
-			values += "?,"
-			db.Args = append(db.Args, val)
-		}
-		values = values[:len(values)-1]
-		db.SqlQuery += values + ")"
+	for _, val := range *fieldSlice {
+		values += "?,"
+		db.Args = append(db.Args, data[val])
 	}
+	values = values[:len(values)-1]
+	db.SqlQuery += values + ")"
 }
 func (db *PgQuery) OperateInsertDataByStruct(data interface{}) {
 	dataType := reflect.TypeOf(data).Elem()
@@ -396,7 +396,7 @@ func (db *PgQuery) OperateInsertDataByStructValue(data interface{}) {
 // | 更改方法
 // +----------------------------------------------------------------------
 
-func (db *PgQuery) UpdateByMap(data *map[string]interface{}) (string, []interface{}) {
+func (db *PgQuery) UpdateByMap(data map[string]interface{}) (string, []interface{}) {
 	db.OperateUpdateByMapData(data)
 	db.replacePlace()
 	return db.SqlQuery, db.Args
@@ -409,11 +409,11 @@ func (db *PgQuery) UpdateByStruct(data interface{}) (string, []interface{}) {
 
 //整理更改查询的sql和参数
 
-func (db *PgQuery) OperateUpdateByMapData(data *map[string]interface{}) {
+func (db *PgQuery) OperateUpdateByMapData(data map[string]interface{}) {
 	db.SqlQuery += "UPDATE " + db.RecordTable + " "
 	db.SqlQuery += "SET "
 	var args []interface{}
-	for key, val := range *data {
+	for key, val := range data {
 		db.SqlQuery += " " + key + " = ? ,"
 		args = append(args, val)
 	}
