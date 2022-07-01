@@ -96,7 +96,7 @@ func (db *PgQuery) Where(field string, val interface{}) *PgQuery {
 	return db
 }
 func (db *PgQuery) WhereOr(field string, val interface{}) *PgQuery {
-	if db.WhereSqlQuery = "" {
+	if db.WhereSqlQuery == "" {
 		db.WhereSqlQuery += "and "
 	} else {
 		db.WhereSqlQuery += "OR "
