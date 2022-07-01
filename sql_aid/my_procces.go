@@ -92,7 +92,7 @@ func (db *MyQuery) Where(field string, val interface{}) *MyQuery {
 	return db
 }
 func (db *MyQuery) WhereOr(field string, val interface{}) *MyQuery {
-	if db.WhereSqlQuery != "" {
+	if db.WhereSqlQuery = "" {
 		db.WhereSqlQuery += "and "
 	} else {
 		db.WhereSqlQuery += "OR "
