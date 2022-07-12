@@ -1,4 +1,4 @@
-package gogo_sql
+package sql_aid
 
 import (
 	"fmt"
@@ -9,17 +9,17 @@ import (
 )
 
 type PgQuery struct {
-	RecordTable    string                 `json:"record_table" Testing:"表明"`
-	RecordField    []string               `json:"record_field" Testing:"字段"`
-	RecordOrder    []string               `json:"record_order" Testing:"排序"`
-	RecordGroup    []string               `json:"record_group" Testing:"分组"`
-	RecordPage     string                 `json:"record_page" Testing:"页数"`
-	RecordSize     string                 `json:"record_size" Testing:"每页数据量"`
-	RecordIncrease map[string]interface{} `json:"record_increase" Testing:"编辑中的增加数据"`
-	RecordDecrease map[string]interface{} `json:"record_decrease" Testing:"编辑中的减少数据"`
-	SqlQuery       string                 `json:"sql_query,string" Testing:"sql语句"`
-	WhereSqlQuery  string                 `json:"where_sql_query" Testing:"sql条件"`
-	Args           []interface{}          `json:"args" Testing:"值"`
+	recordTable    string                 `Testing:"表明"`
+	recordField    []string               `Testing:"字段"`
+	recordOrder    []string               `Testing:"排序"`
+	recordGroup    []string               `Testing:"分组"`
+	recordPage     string                 `Testing:"页数"`
+	recordSize     string                 `Testing:"每页数据量"`
+	recordIncrease map[string]interface{} `Testing:"编辑中的增加数据"`
+	recordDecrease map[string]interface{} `Testing:"编辑中的减少数据"`
+	sqlQuery       string                 `Testing:"sql语句"`
+	whereSqlQuery  string                 `Testing:"sql条件"`
+	args           []interface{}          `Testing:"值"`
 }
 type PgChildQuery func(*PgQuery, ...interface{})
 
@@ -32,220 +32,240 @@ type PgChildQuery func(*PgQuery, ...interface{})
 func (db *PgQuery) ToSql() (string, []interface{}) {
 	db.jointSql()
 	db.replacePlace()
-	return db.SqlQuery, db.Args
+	return db.sqlQuery, db.args
 }
 func (db *PgQuery) jointSql() (string, []interface{}) {
-	db.OperateFindToSql()
-	return db.SqlQuery, db.Args
+	db.operateFindToSql()
+	return db.sqlQuery, db.args
 }
 
 //查询固定方法
 
-func (db *PgQuery) Table(Table string) {
-	db.RecordTable = Table
+func (db *PgQuery) Table(Table string) *PgQuery {
+	db.recordTable = Table
+	return db
 }
-func (db *PgQuery) Field(field ...string) {
+func (db *PgQuery) Field(field ...string) *PgQuery {
 	for key, val := range field {
 		field[key] = val
 	}
-	db.RecordField = field
+	db.recordField = field
+	return db
 }
-func (db *PgQuery) Inc(field string,data interface{}) {
-	db.RecordIncrease[field] = data
+func (db *PgQuery) Inc(field string,data interface{}) *PgQuery {
+	db.recordIncrease[field] = data
+	return db
 }
-func (db *PgQuery) IncAll(incMap map[string]interface{}) {
+func (db *PgQuery) IncAll(incMap map[string]interface{}) *PgQuery {
 	for key, val := range incMap {
-		db.RecordIncrease[key] = val
+		db.recordIncrease[key] = val
 	}
+	return db
 }
-func (db *PgQuery) Dec(field string,data interface{}) {
-	db.RecordDecrease[field] = data
+func (db *PgQuery) Dec(field string,data interface{}) *PgQuery {
+	db.recordDecrease[field] = data
+	return db
 }
 
-func (db *PgQuery) DecAll(decMap map[string]interface{}) {
+func (db *PgQuery) DecAll(decMap map[string]interface{}) *PgQuery {
 	for key, val := range decMap {
-		db.RecordDecrease[key] = val
+		db.recordDecrease[key] = val
 	}
+	return db
 }
 
-func (db *PgQuery) OrderBy(Order string) {
-	db.RecordOrder = append(db.RecordOrder, Order)
+func (db *PgQuery) OrderBy(Order string) *PgQuery {
+	db.recordOrder = append(db.recordOrder, Order)
+	return db
 }
-func (db *PgQuery) GroupBy(groupBy string) {
-	db.RecordGroup = append(db.RecordGroup, groupBy)
+func (db *PgQuery) GroupBy(groupBy string) *PgQuery {
+	db.recordGroup = append(db.recordGroup, groupBy)
+	return db
 }
 
 //where条件
 
-func (db *PgQuery) Where(field string, val interface{}) {
-	if db.WhereSqlQuery != "" {
-		db.WhereSqlQuery += "and "
+func (db *PgQuery) Where(field string, val interface{}) *PgQuery {
+	if db.whereSqlQuery != "" {
+		db.whereSqlQuery += "and "
 	}
-	db.WhereSqlQuery += field + " "
+	db.whereSqlQuery += field + " "
 	if val != nil {
-		db.Args = append(db.Args, val)
+		db.args = append(db.args, val)
 	}
+	return db
 }
-func (db *PgQuery) WhereOr(field string, val interface{}) {
-	if db.WhereSqlQuery == "" {
-		db.WhereSqlQuery += "and "
+func (db *PgQuery) WhereOr(field string, val interface{}) *PgQuery {
+	if db.whereSqlQuery == "" {
+		db.whereSqlQuery += "and "
 	} else {
-		db.WhereSqlQuery += "OR "
+		db.whereSqlQuery += "OR "
 	}
-	db.WhereSqlQuery += "(" + field + ") "
+	db.whereSqlQuery += "(" + field + ") "
 	if val != nil {
-		db.Args = append(db.Args, val)
+		db.args = append(db.args, val)
 	}
+	return db
 }
-func (db *PgQuery) WhereIn(field string, condition ...interface{}) {
-	if db.WhereSqlQuery != "" {
-		db.WhereSqlQuery += "and "
+func (db *PgQuery) WhereIn(field string, condition ...interface{}) *PgQuery {
+	if db.whereSqlQuery != "" {
+		db.whereSqlQuery += "and "
 	}
-	db.WhereSqlQuery += field + " in ("
+	db.whereSqlQuery += field + " in ("
 	for _, _ = range condition {
-		db.WhereSqlQuery += "?,"
+		db.whereSqlQuery += "?,"
 	}
-	db.WhereSqlQuery = db.WhereSqlQuery[:len(db.WhereSqlQuery)-1]
-	db.WhereSqlQuery += ") "
-	db.Args = append(db.Args, condition...)
+	db.whereSqlQuery = db.whereSqlQuery[:len(db.whereSqlQuery)-1]
+	db.whereSqlQuery += ") "
+	db.args = append(db.args, condition...)
+
+	return db
 }
-func (db *PgQuery) WhereNotIn(field string, condition ...interface{}) {
-	if db.WhereSqlQuery != "" {
-		db.WhereSqlQuery += "and "
+func (db *PgQuery) WhereNotIn(field string, condition ...interface{}) *PgQuery {
+	if db.whereSqlQuery != "" {
+		db.whereSqlQuery += "and "
 	}
-	db.WhereSqlQuery += field + " not in ("
+	db.whereSqlQuery += field + " not in ("
 	for _, _ = range condition {
-		db.WhereSqlQuery += "?,"
+		db.whereSqlQuery += "?,"
 	}
-	db.WhereSqlQuery = db.WhereSqlQuery[:len(db.WhereSqlQuery)-1]
-	db.WhereSqlQuery += ") "
-	db.Args = append(db.Args, condition...)
+	db.whereSqlQuery = db.whereSqlQuery[:len(db.whereSqlQuery)-1]
+	db.whereSqlQuery += ") "
+	db.args = append(db.args, condition...)
+
+	return db
 }
-func (db *PgQuery) WhereRaw(childQuery PgChildQuery, val ...interface{}) {
+func (db *PgQuery) WhereRaw(childQuery PgChildQuery, val ...interface{}) *PgQuery {
 	check := &PgQuery{}
 	childQuery(check, val...)
 	checkSql, args := check.jointSql()
 	if checkSql == "" {
-		return
+		return db
 	}
-	if db.WhereSqlQuery != "" {
-		db.WhereSqlQuery += "and "
+	if db.whereSqlQuery != "" {
+		db.whereSqlQuery += "and "
 	}
-	db.WhereSqlQuery += "("
-	db.WhereSqlQuery += checkSql
-	db.Args = append(db.Args, args...)
-	db.WhereSqlQuery += ") "
+	db.whereSqlQuery += "("
+	db.whereSqlQuery += checkSql
+	db.args = append(db.args, args...)
+	db.whereSqlQuery += ") "
+	return db
 }
-func (db *PgQuery) WhereOrRaw(childQuery PgChildQuery, val ...interface{}) {
+func (db *PgQuery) WhereOrRaw(childQuery PgChildQuery, val ...interface{}) *PgQuery {
 	check := &PgQuery{}
 	childQuery(check, val...)
 	checkSql, args := check.jointSql()
 	if checkSql == "" {
-		return
+		return db
 	}
-	if db.WhereSqlQuery != "" {
-		db.WhereSqlQuery += "OR ("
+	if db.whereSqlQuery != "" {
+		db.whereSqlQuery += "OR ("
 	} else {
-		db.WhereSqlQuery += "( "
+		db.whereSqlQuery += "( "
 	}
-	db.WhereSqlQuery += checkSql
-	db.Args = append(db.Args, args...)
-	db.WhereSqlQuery += ") "
+	db.whereSqlQuery += checkSql
+	db.args = append(db.args, args...)
+	db.whereSqlQuery += ") "
+	return db
 }
-func (db *PgQuery) WhereInRaw(field string, childQuery PgChildQuery, val ...interface{}) {
-	if db.WhereSqlQuery != "" {
-		db.WhereSqlQuery += "and "
+func (db *PgQuery) WhereInRaw(field string, childQuery PgChildQuery, val ...interface{}) *PgQuery {
+	if db.whereSqlQuery != "" {
+		db.whereSqlQuery += "and "
 	}
-	db.WhereSqlQuery += field + " in ("
+	db.whereSqlQuery += field + " in ("
 	check := &PgQuery{}
 	childQuery(check, val...)
 	checkSql, args := check.jointSql()
-	db.WhereSqlQuery += checkSql
-	db.Args = append(db.Args, args...)
-	db.WhereSqlQuery += ") "
+	db.whereSqlQuery += checkSql
+	db.args = append(db.args, args...)
+	db.whereSqlQuery += ") "
+	return db
 }
-func (db *PgQuery) WhereNotInRaw(field string, childQuery PgChildQuery, val ...interface{}) {
-	if db.WhereSqlQuery != "" {
-		db.WhereSqlQuery += "and "
+func (db *PgQuery) WhereNotInRaw(field string, childQuery PgChildQuery, val ...interface{}) *PgQuery {
+	if db.whereSqlQuery != "" {
+		db.whereSqlQuery += "and "
 	}
-	db.WhereSqlQuery += field + "not in ("
+	db.whereSqlQuery += field + "not in ("
 	check := &PgQuery{}
 	childQuery(check, val...)
 	checkSql, args := check.jointSql()
-	db.WhereSqlQuery += checkSql
-	db.Args = append(db.Args, args...)
-	db.WhereSqlQuery += ") "
+	db.whereSqlQuery += checkSql
+	db.args = append(db.args, args...)
+	db.whereSqlQuery += ") "
+	return db
 }
-func (db *PgQuery) WhereId(id interface{}) {
-	if db.WhereSqlQuery != "" {
-		db.WhereSqlQuery += "and "
+func (db *PgQuery) WhereId(id interface{}) *PgQuery {
+	if db.whereSqlQuery != "" {
+		db.whereSqlQuery += "and "
 	}
-	db.WhereSqlQuery = "id = ? "
-	db.Args = append(db.Args, id)
+	db.whereSqlQuery = "id = ? "
+	db.args = append(db.args, id)
+	return db
 }
-func (db *PgQuery) PageSize(page string, size string) {
+func (db *PgQuery) PageSize(page string, size string) *PgQuery {
 	if page == ""{
 		page = "1"
 	}
 	if size == ""{
 		size = "10"
 	}
-	db.RecordPage = page
-	db.RecordSize = size
+	db.recordPage = page
+	db.recordSize = size
+	return db
 }
 
 // 整理查询的sql和参数
 
-func (db *PgQuery) OperateFindToSql() {
-	if db.RecordTable != "" {
-		db.OperateFindField()
-		db.OperateFindTable()
+func (db *PgQuery) operateFindToSql() {
+	if db.recordTable != "" {
+		db.operateFindField()
+		db.operateFindTable()
 	}
-	if db.RecordTable != "" && db.WhereSqlQuery != "" {
-		db.SqlQuery += "where "
+	if db.recordTable != "" && db.whereSqlQuery != "" {
+		db.sqlQuery += "where "
 	}
-	db.SqlQuery += db.WhereSqlQuery
-	db.OperateFindGroupBy()
-	db.OperateFindOrderBy()
-	db.OperateFindPageSize()
+	db.sqlQuery += db.whereSqlQuery
+	db.operateFindGroupBy()
+	db.operateFindOrderBy()
+	db.operateFindPageSize()
 }
-func (db *PgQuery) OperateFindField() {
-	db.SqlQuery = "select "
-	if db.RecordField != nil {
-		db.SqlQuery += utility.StringBySliceString(",", db.RecordField) + " "
+func (db *PgQuery) operateFindField() {
+	db.sqlQuery = "select "
+	if db.recordField != nil {
+		db.sqlQuery += utility.StringBySliceString(",", db.recordField) + " "
 	} else {
-		db.SqlQuery += "* "
+		db.sqlQuery += "* "
 	}
 }
-func (db *PgQuery) OperateFindTable() {
-	db.SqlQuery += "FROM " + db.RecordTable + " "
+func (db *PgQuery) operateFindTable() {
+	db.sqlQuery += "FROM " + db.recordTable + " "
 }
-func (db *PgQuery) OperateFindGroupBy() {
-	if db.RecordGroup != nil {
-		db.SqlQuery += "GROUP BY " + strings.Join(db.RecordGroup, ",") + " "
+func (db *PgQuery) operateFindGroupBy() {
+	if db.recordGroup != nil {
+		db.sqlQuery += "GROUP BY " + strings.Join(db.recordGroup, ",") + " "
 	}
 }
-func (db *PgQuery) OperateFindOrderBy() {
-	if db.RecordOrder != nil {
-		db.SqlQuery += "ORDER BY " + strings.Join(db.RecordOrder, ",") + " "
+func (db *PgQuery) operateFindOrderBy() {
+	if db.recordOrder != nil {
+		db.sqlQuery += "ORDER BY " + strings.Join(db.recordOrder, ",") + " "
 	}
 }
 
-func (db *PgQuery) OperateFindPageSize() {
-	page, err := strconv.Atoi(db.RecordPage)
+func (db *PgQuery) operateFindPageSize() {
+	page, err := strconv.Atoi(db.recordPage)
 	if err != nil {
 		return
 	}
 	if page <= 0 {
 		page = 1
 	}
-	size, _ := strconv.Atoi(db.RecordSize)
+	size, _ := strconv.Atoi(db.recordSize)
 	if size == 0 {
 		size = 10
 	}
-	db.SqlQuery += "limit ? OFFSET ? "
-	db.Args = append(db.Args, size)
-	db.Args = append(db.Args, (page-1)*size)
+	db.sqlQuery += "limit ? OFFSET ? "
+	db.args = append(db.args, size)
+	db.args = append(db.args, (page-1)*size)
 
 }
 
@@ -253,76 +273,82 @@ func (db *PgQuery) OperateFindPageSize() {
 // | 添加方法
 // +----------------------------------------------------------------------
 
-func (db *PgQuery) InsertByMap(data map[string]interface{}) {
-	db.OperateInsertTable()
-	db.OperateInsertDataByMap(data)
+func (db *PgQuery) InsertByMap(data map[string]interface{}) (string, []interface{}) {
+	db.operateInsertTable()
+	db.operateInsertDataByMap(data)
 	db.replacePlace()
+	return db.sqlQuery, db.args
 }
-func (db *PgQuery) InsertByStruct(data interface{}) {
-	db.OperateInsertTable()
-	db.OperateInsertDataByStruct(data)
+func (db *PgQuery) InsertByStruct(data interface{}) (string, []interface{}) {
+	db.operateInsertTable()
+	db.operateInsertDataByStruct(data)
 	db.replacePlace()
+	return db.sqlQuery, db.args
 }
-func (db *PgQuery) InsertAllByMap(datas *[]map[string]interface{}) {
-	db.OperateInsertTable()
+func (db *PgQuery) InsertAllByMap(datas *[]map[string]interface{}) (string, []interface{}) {
+	db.operateInsertTable()
 	dataSlice := *datas
 	if len(dataSlice) < 1{
-		return
+		return "",nil
 	}
-	fieldSlice := db.OperateInsertDataByMap(dataSlice[0])
+	fieldSlice := db.operateInsertDataByMap(dataSlice[0])
 	for _, val := range dataSlice[1:] {
-		db.OperateInsertDataByMapValue(val,fieldSlice)
+		db.operateInsertDataByMapValue(val,fieldSlice)
 	}
 	db.replacePlace()
+	return db.sqlQuery, db.args
+
 }
-func (db *PgQuery) InsertAllByStruct(datas []interface{}) {
-	db.OperateInsertTable()
+func (db *PgQuery) InsertAllByStruct(datas []interface{}) (string, []interface{}) {
+	db.operateInsertTable()
 	for key, val := range datas {
 		if key == 0 {
-			db.OperateInsertDataByStruct(val)
+			db.operateInsertDataByStruct(val)
 		} else {
-			db.OperateInsertDataByStructValue(val)
+			db.operateInsertDataByStructValue(val)
 		}
 	}
 	db.replacePlace()
+	return db.sqlQuery, db.args
+
 }
 
 // 整理查询的sql和参数
 
-func (db *PgQuery) OperateInsertTable() {
-	if db.RecordTable != "" {
-		db.SqlQuery += "INSERT INTO " + db.RecordTable + " "
+func (db *PgQuery) operateInsertTable() {
+	if db.recordTable != "" {
+		db.sqlQuery += "INSERT INTO " + db.recordTable + " "
 	}
 }
-func (db *PgQuery) OperateInsertDataByMap(data map[string]interface{}) *[]string {
+func (db *PgQuery) operateInsertDataByMap(data map[string]interface{}) *[]string {
 	numData := len(data)
 	field := make([]string,0)
 	if numData > 0 {
-		db.SqlQuery += "("
+		db.sqlQuery += "("
 		values := ""
 		for key, val := range data {
 			field = append(field,key)
-			db.SqlQuery += key + ","
+			db.sqlQuery += key + ","
 			values += "?,"
-			db.Args = append(db.Args, val)
+			db.args = append(db.args, val)
 		}
-		db.SqlQuery = db.SqlQuery[:len(db.SqlQuery)-1]
+		db.sqlQuery = db.sqlQuery[:len(db.sqlQuery)-1]
 		values = values[:len(values)-1]
-		db.SqlQuery += ") VALUES (" + values + ")"
+		db.sqlQuery += ") VALUES (" + values + ")"
 	}
 	return &field
 }
-func (db *PgQuery) OperateInsertDataByMapValue(data map[string]interface{},fieldSlice *[]string) {
-	db.SqlQuery += ",( "
+func (db *PgQuery) operateInsertDataByMapValue(data map[string]interface{},fieldSlice *[]string) {
+	db.sqlQuery += ",( "
 	values := ""
 	for _, val := range *fieldSlice {
 		values += "?,"
-		db.Args = append(db.Args, data[val])
+		db.args = append(db.args, data[val])
 	}
 	values = values[:len(values)-1]
-	db.SqlQuery += values + ")"
+	db.sqlQuery += values + ")"
 }
-func (db *PgQuery) OperateInsertDataByStruct(data interface{}) {
+func (db *PgQuery) operateInsertDataByStruct(data interface{}) {
 	dataType := reflect.TypeOf(data).Elem()
 	dataValue := reflect.ValueOf(data).Elem()
 	if dataType.Kind() != reflect.Struct {
@@ -331,20 +357,20 @@ func (db *PgQuery) OperateInsertDataByStruct(data interface{}) {
 	numField := dataValue.NumField()
 	if numField > 0 {
 		values := ""
-		db.SqlQuery += "("
+		db.sqlQuery += "("
 		for i := 0; i < dataValue.NumField(); i++ {
 			field := dataType.Field(i).Tag.Get("json")
 			structValue := dataValue.Field(i).Interface()
-			db.SqlQuery += field + ","
+			db.sqlQuery += field + ","
 			values += "?,"
-			db.Args = append(db.Args, structValue)
+			db.args = append(db.args, structValue)
 		}
-		db.SqlQuery = db.SqlQuery[:len(db.SqlQuery)-1]
+		db.sqlQuery = db.sqlQuery[:len(db.sqlQuery)-1]
 		values = values[:len(values)-1]
-		db.SqlQuery += ") VALUES (" + values + ") "
+		db.sqlQuery += ") VALUES (" + values + ") "
 	}
 }
-func (db *PgQuery) OperateInsertDataByStructValue(data interface{}) {
+func (db *PgQuery) operateInsertDataByStructValue(data interface{}) {
 	dataType := reflect.TypeOf(data).Elem()
 	dataValue := reflect.ValueOf(data).Elem()
 	if dataType.Kind() != reflect.Struct {
@@ -358,11 +384,11 @@ func (db *PgQuery) OperateInsertDataByStructValue(data interface{}) {
 			structValue := dataValue.Field(i).Interface()
 
 			values += "?,"
-			db.Args = append(db.Args, structValue)
+			db.args = append(db.args, structValue)
 		}
 
 		values = values[:len(values)-1]
-		db.SqlQuery += values + ")"
+		db.sqlQuery += values + ")"
 	}
 }
 
@@ -370,69 +396,71 @@ func (db *PgQuery) OperateInsertDataByStructValue(data interface{}) {
 // | 更改方法
 // +----------------------------------------------------------------------
 
-func (db *PgQuery) UpdateByMap(data map[string]interface{}) {
-	db.OperateUpdateByMapData(data)
+func (db *PgQuery) UpdateByMap(data map[string]interface{}) (string, []interface{}) {
+	db.operateUpdateByMapData(data)
 	db.replacePlace()
+	return db.sqlQuery, db.args
 }
-func (db *PgQuery) UpdateByStruct(data interface{}) {
-	db.OperateUpdateByStructData(data)
+func (db *PgQuery) UpdateByStruct(data interface{}) (string, []interface{}) {
+	db.operateUpdateByStructData(data)
 	db.replacePlace()
+	return db.sqlQuery, db.args
 }
 
 //整理更改查询的sql和参数
 
-func (db *PgQuery) OperateUpdateByMapData(data map[string]interface{}) {
-	db.SqlQuery += "UPDATE " + db.RecordTable + " "
-	db.SqlQuery += "SET "
+func (db *PgQuery) operateUpdateByMapData(data map[string]interface{}) {
+	db.sqlQuery += "UPDATE " + db.recordTable + " "
+	db.sqlQuery += "SET "
 	var args []interface{}
 	for key, val := range data {
-		db.SqlQuery += " " + key + " = ? ,"
+		db.sqlQuery += " " + key + " = ? ,"
 		args = append(args, val)
 	}
-	for incKey, incVal := range db.RecordIncrease {
-		db.SqlQuery += " " + incKey + " = "+incKey+" + ? ,"
+	for incKey, incVal := range db.recordIncrease {
+		db.sqlQuery += " " + incKey + " = "+incKey+" + ? ,"
 		args = append(args, incVal)
 	}
-	for decKey, decVal := range db.RecordDecrease {
-		db.SqlQuery += " " + decKey + " = "+decKey+" - ? ,"
+	for decKey, decVal := range db.recordDecrease {
+		db.sqlQuery += " " + decKey + " = "+decKey+" - ? ,"
 		args = append(args, decVal)
 	}
-	db.Args = append(args, db.Args...)
-	db.SqlQuery = db.SqlQuery[:len(db.SqlQuery)-1]
-	if db.WhereSqlQuery != "" {
-		db.SqlQuery += "where "
+	db.args = append(args, db.args...)
+	db.sqlQuery = db.sqlQuery[:len(db.sqlQuery)-1]
+	if db.whereSqlQuery != "" {
+		db.sqlQuery += "where "
 	}
-	db.SqlQuery += db.WhereSqlQuery
+	db.sqlQuery += db.whereSqlQuery
 }
-func (db *PgQuery) OperateUpdateByStructData(data interface{}) {
+func (db *PgQuery) operateUpdateByStructData(data interface{}) {
 	dataType := reflect.TypeOf(data).Elem()
 	dataValue := reflect.ValueOf(data).Elem()
 	if dataType.Kind() != reflect.Struct {
 		return
 	}
-	db.SqlQuery += "UPDATE " + db.RecordTable + " "
-	db.SqlQuery += "SET "
-	var args []interface{}
-	for i := 0; i < dataValue.NumField(); i++ {
-		field := dataType.Field(i).Tag.Get("json")
-		structValue := dataValue.Field(i).Interface()
-		db.SqlQuery += " " + field + " = ? ,"
-		args = append(args, structValue)
-	}
-	for incKey, incVal := range db.RecordIncrease {
-		db.SqlQuery += " " + incKey + " = "+incKey+" + ? ,"
-		args = append(args, incVal)
-	}
-	for decKey, decVal := range db.RecordDecrease {
-		db.SqlQuery += " " + decKey + " = "+decKey+" - ? ,"
-		args = append(args, decVal)
-	}
-	db.SqlQuery = db.SqlQuery[:len(db.SqlQuery)-1]
-	db.Args = append(args, db.Args...)
-	if db.WhereSqlQuery != "" {
-		db.SqlQuery += "where "
-	}
-	db.SqlQuery += db.WhereSqlQuery
+		db.sqlQuery += "UPDATE " + db.recordTable + " "
+		db.sqlQuery += "SET "
+		var args []interface{}
+		for i := 0; i < dataValue.NumField(); i++ {
+			field := dataType.Field(i).Tag.Get("json")
+			structValue := dataValue.Field(i).Interface()
+			db.sqlQuery += " " + field + " = ? ,"
+			args = append(args, structValue)
+		}
+		for incKey, incVal := range db.recordIncrease {
+			db.sqlQuery += " " + incKey + " = "+incKey+" + ? ,"
+			args = append(args, incVal)
+		}
+		for decKey, decVal := range db.recordDecrease {
+			db.sqlQuery += " " + decKey + " = "+decKey+" - ? ,"
+			args = append(args, decVal)
+		}
+		db.sqlQuery = db.sqlQuery[:len(db.sqlQuery)-1]
+		db.args = append(args, db.args...)
+		if db.whereSqlQuery != "" {
+			db.sqlQuery += "where "
+		}
+		db.sqlQuery += db.whereSqlQuery
 
 }
 
@@ -441,31 +469,32 @@ func (db *PgQuery) OperateUpdateByStructData(data interface{}) {
 // +----------------------------------------------------------------------
 
 // Delete 删除方法
-func (db *PgQuery) Delete(){
-	db.OperateDeleteData()
+func (db *PgQuery) Delete() (string, []interface{}) {
+	db.operateDeleteData()
 	db.replacePlace()
+	return db.sqlQuery, db.args
 }
 
 // OperateDeleteData 整理删除查询的sql和参数
-func (db *PgQuery) OperateDeleteData() {
-	db.SqlQuery += "DELETE FROM  " + db.RecordTable + " "
-	if db.WhereSqlQuery != "" {
-		db.SqlQuery += "where "
+func (db *PgQuery) operateDeleteData() {
+	db.sqlQuery += "DELETE FROM  " + db.recordTable + " "
+	if db.whereSqlQuery != "" {
+		db.sqlQuery += "where "
 	}
-	db.SqlQuery += db.WhereSqlQuery
+	db.sqlQuery += db.whereSqlQuery
 }
 
 // +----------------------------------------------------------------------
-// | 开始
+// | 开头
 // +----------------------------------------------------------------------
 
-//func PgTable(table string) *PgQuery {
-//	return &PgQuery{
-//		RecordTable: table,
-//		//RecordIncrease: make(map[string]interface{}),
-//		//RecordDecrease: make(map[string]interface{}),
-//	}
-//}
+func PgTable(table string) *PgQuery {
+	return &PgQuery{
+		recordTable: table,
+		recordIncrease: make(map[string]interface{}),
+		recordDecrease: make(map[string]interface{}),
+	}
+}
 
 // +----------------------------------------------------------------------
 // | my包没有的
@@ -473,14 +502,14 @@ func (db *PgQuery) OperateDeleteData() {
 
 //因默认使用的?做占位符,pg数据库用的是$+变量,这里再生成sql语句的时候进行转换一下,变成pg可执行的sql
 func (db *PgQuery) replacePlace() {
-	split := strings.Split(db.SqlQuery, "?")
-	db.SqlQuery = ""
+	split := strings.Split(db.sqlQuery, "?")
+	db.sqlQuery = ""
 	lenSplit := len(split)
 	for i, s := range split {
 		if i+1 >= lenSplit {
-			db.SqlQuery += fmt.Sprintf("%v", s)
+			db.sqlQuery += fmt.Sprintf("%v", s)
 		} else {
-			db.SqlQuery += fmt.Sprintf("%v$%v", s, i+1)
+			db.sqlQuery += fmt.Sprintf("%v$%v", s, i+1)
 		}
 	}
 }
