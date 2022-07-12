@@ -133,16 +133,6 @@ func (c *Centre) createRequestMapDataRun() {
 
 }
 
-func resolveAddress(addr []interface{}) string {
-	switch len(addr) {
-	case 0:
-		return ":8080"
-	case 1:
-		return addr[0].(string)
-	default:
-		panic("too many parameters")
-	}
-}
 
 
 
