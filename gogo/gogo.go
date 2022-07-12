@@ -26,19 +26,19 @@ var ServerStatus = ServerStatusAllow //阻止外网访问:0=正常,1=禁止,2=�
 type HandlerFunc func(util *job.Job)
 type GroupFunc func()
 type Centre struct {
-	Middleware []HandlerFunc `Testing:"中间件"`
-	ServerClose   chan int     `Testing:"关闭服务(传入数据执行关闭操作)"`
-	Server        *http.Server `Testing:"http服务"`
+	Middleware    []HandlerFunc                        `Testing:"中间件"`
+	ServerClose   chan int                             `Testing:"关闭服务(传入数据执行关闭操作)"`
+	Server        *http.Server                         `Testing:"http服务"`
 	gatherRequest map[string]map[string]*[]HandlerFunc `Testing:"路由接口集合"`
 }
 
 func ReadyGo() *Centre {
 	return &Centre{
-		Middleware:   []HandlerFunc{},
-		ServerClose:  make(chan int, 1),
+		Middleware:  []HandlerFunc{},
+		ServerClose: make(chan int, 1),
 		Server: &http.Server{
 			Addr: ":8000",
-			Handler: http.TimeoutHandler(http.DefaultServeMux, time.Second*(3600 * 3), func() string {
+			Handler: http.TimeoutHandler(http.DefaultServeMux, time.Second*(3600*3), func() string {
 				msg := job.Message{
 					Data: make([]int, 0),
 					Msg:  "操作失败",
@@ -46,41 +46,40 @@ func ReadyGo() *Centre {
 				}
 				return string(msg.Json(nil))
 			}()),
-// 			ReadTimeout:    10 * time.Second,
-// 			WriteTimeout:   10 * time.Second,
-// 			MaxHeaderBytes: 1 << 20,
+			// 			ReadTimeout:    10 * time.Second,
+			// 			WriteTimeout:   10 * time.Second,
+			// 			MaxHeaderBytes: 1 << 20,
 		},
 		gatherRequest: make(map[string]map[string]*[]HandlerFunc),
 	}
 }
 
-// Run 启动
-func (c *Centre) Run(addr ...interface{}) {
-	c.createRequestMapDataRun()          //生成路由接口
-	go gogo_log.LogChanOut()             //日志管道处理
-	go cache.ChanLongTime()              //缓存清除过期数据
-	c.Server.Addr = resolveAddress(addr) //确认端口
+// Run 启动 (端口，关闭服务时长)
+func (c *Centre) Run(addr string, exitTime int) {
+	c.createRequestMapDataRun() //生成路由接口
+	go gogo_log.LogChanOut()    //日志管道处理
+	go cache.ChanLongTime()     //缓存清除过期数据
+	c.Server.Addr = addr        //确认端口
 	go func() {
 		_ = c.Server.ListenAndServe()
 	}() //启动
-	listenSignal(context.Background(),c)
+	listenSignal(context.Background(), c, exitTime)
 }
 
-func listenSignal(ctx context.Context, c *Centre) {
+func listenSignal(ctx context.Context, c *Centre, exitTime int) {
 	sigs := make(chan os.Signal, 1) //Signal代表一个操作系统信号。
 	signal.Notify(sigs, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
 
 	select {
 	case <-sigs:
-		gogo_log.Write("gogo_server","服务器关闭","服务器内Ctrl+C关闭")
+		gogo_log.Write("gogo_server", "服务器关闭", "服务器内Ctrl+C关闭")
 	case <-c.ServerClose:
-		gogo_log.Write("gogo_server","服务器关闭","服务器接口调用被关闭")
+		gogo_log.Write("gogo_server", "服务器关闭", "服务器接口调用被关闭")
 	}
 	ServerStatus = ServerStatusSystemForbid
 	fmt.Println("http服务器已经停止外网访问!")
-	fmt.Println("5秒后关闭计算机...")
-	for i := 5; i > 0; i-- {
-
+	fmt.Printf("%v秒后关闭计算机...\n", exitTime)
+	for i := exitTime; i > 0; i-- {
 		fmt.Print(i, "->")
 		time.Sleep(time.Second)
 	}
@@ -88,7 +87,4 @@ func listenSignal(ctx context.Context, c *Centre) {
 	_ = c.Server.Shutdown(ctx)
 	fmt.Println("服务器执行关闭彻底完成")
 
-
 }
-
-
