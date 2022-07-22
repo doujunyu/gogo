@@ -78,12 +78,16 @@ func main() {
 	})
 
 	r.GET("/demo1", func(j *job.Job) {
-		input := j.Input
-
-		j.JsonSuccess(input,"这里是get提交")
+		//input := j.Input
+		fmt.Println("FormValue:",j.R.FormValue("title"))
+		fmt.Println("Form:",j.R.Form)
+		j.JsonSuccess(nil,"这里是get提交")
 	})
 	r.POST("/demo", func(j *job.Job) {
-		gogo_log.Write("gogo","前缀","正常信息")
+		//gogo_log.Write("gogo","前缀","正常信息")
+		fmt.Println("Form:",j.R.Form)
+
+		fmt.Println( "接收到数据："+j.InputJson)
 		j.JsonSuccess(nil,"这里是post提交")
 	})
 	//之前中间件
@@ -205,7 +209,7 @@ func main() {
 		buff, _ := ioutil.ReadAll(file)
 		_,_ = j.W.Write(buff)
 	})
-	r.Run(":8000")
+	r.Run(":8999",3)
 
 }
 

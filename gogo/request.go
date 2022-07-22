@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/doujunyu/gogo/gogo_log"
 	"github.com/doujunyu/gogo/job"
+	"io/ioutil"
 	"net/http"
 	"runtime/debug"
 )
@@ -97,16 +98,21 @@ func (c *Centre) createRequestMapDataRun() {
 					jobs.JsonError(nil, "服务器停止访问...")
 					return
 				}
+				if handlerFuncMapSlice[r.Method] == nil {
+					jobs.JsonError(nil, r.Method +"请求方式不存在", 1)
+					return
+				}
 				//参数赋值
 				jobs.Input = make(map[string]string)
 				for key, valuse := range r.Form {
 					jobs.Input[key] = valuse[0]
 				}
+				//json参数赋值
+				con, _ := ioutil.ReadAll(jobs.R.Body)
+				defer jobs.R.Body.Close()
+				jobs.InputJson = string(con)
 
-				if handlerFuncMapSlice[r.Method] == nil {
-					jobs.JsonError(nil, r.Method +"请求方式不存在", 1)
-					return
-				}
+
 				defer func() {
 					if err := recover(); err != nil {
 						logMessage := fmt.Sprintf("%v请求 路由:%v 参数%v \n 报错详情:%v \n %v",r.Method,relativePath,jobs.Input, err,string(debug.Stack()))
