@@ -5,39 +5,34 @@ import (
 	"time"
 )
 
-var GlobalCacheData *Cache
+var GlobalCacheData *cache
 var GlobalCacheOnce sync.Once
 
-
-type Cache struct {
+//写入
+type cache struct {
 	CacheChan chan int         `Testing:"生成管道,添加和编辑用管道操作"`
-	Data      map[string]*CacheValue `Testing:"操作的数据"`
-}
-
-// CacheKey 管道数据格式
-type CacheKey struct {
-	WorkType int         `Testing:"操作方式：1=添加,2=编辑,3=删除,4=增加时间,5=减少时间"`
-	Name     string      `Testing:"缓存名"`
-	Data     *CacheValue `Testing:"缓存数据"`
+	Data      map[string]*cacheValue `Testing:"操作的数据"`
 }
 
 // CacheValue 缓存数据格式
-type CacheValue struct {
+type cacheValue struct {
 	Data interface{}
 	Time int64
 }
+
 func init()  {
 	GlobalCacheOnce.Do(func() {
-		GlobalCacheData =  &Cache{
+		GlobalCacheData =  &cache{
 			CacheChan: make(chan int,1),
-			Data:      make(map[string]*CacheValue),
+			Data:      make(map[string]*cacheValue),
 		}
 	})
 }
+
 // Set 新增缓存,时间=0表示长期存储,无论有没有数据都直接赋值
 func Set(name string, data interface{}, second int64) bool {
 	GlobalCacheData.CacheChan <- 1
-	GlobalCacheData.Data[name] = &CacheValue{
+	GlobalCacheData.Data[name] = &cacheValue{
 		Time: time.Now().Unix() + second,
 		Data: data,
 	}
@@ -52,13 +47,14 @@ func SetCover(name string, data interface{}, second int64) bool {
 		<-GlobalCacheData.CacheChan
 		return false
 	}
-	GlobalCacheData.Data[name] = &CacheValue{
+	GlobalCacheData.Data[name] = &cacheValue{
 		Time: time.Now().Unix() + second,
 		Data: data,
 	}
 	<-GlobalCacheData.CacheChan
 	return true
 }
+
 // SetDataCover 重置缓存数据
 func SetDataCover(name string, data interface{}) bool {
 	GlobalCacheData.CacheChan <- 1
