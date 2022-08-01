@@ -163,7 +163,6 @@ func main() {
 	//缓存
 	r.GET("/cache", func(j *job.Job) {
 		if j.Input["data"] != "" {
-
 			cache.Set(j.Input["name"],j.Input["data"],5)
 		}
 		data :=  cache.Get(j.Input["name"])
